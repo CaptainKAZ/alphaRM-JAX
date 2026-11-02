@@ -1,0 +1,190 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1080" viewBox="0 0 1800 1080">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+    </marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4"
+                    flood-color="#1e293b" flood-opacity=".10"/>
+    </filter>
+    <style>
+      text { font-family:"Noto Sans CJK SC","Microsoft YaHei",sans-serif; fill:#172033; }
+      .title { font-size:30px; font-weight:700; }
+      .subtitle { font-size:14px; fill:#5b6b7e; }
+      .panel-title { font-size:22px; font-weight:700; }
+      .head { font-size:15px; font-weight:700; }
+      .body { font-size:13px; }
+      .small { font-size:11.5px; fill:#506176; }
+      .micro { font-size:10.5px; fill:#64748b; }
+      .actor-panel { fill:#f4f9ff; stroke:#c6dff2; stroke-width:1.5; }
+      .critic-panel { fill:#fff9ef; stroke:#ecd6af; stroke-width:1.5; }
+      .input { fill:#fff; stroke:#8cbddd; stroke-width:1.3; }
+      .token { fill:#e9f5ff; stroke:#8bc2e6; stroke-width:1.1; }
+      .module { fill:#fff; stroke:#78b0d5; stroke-width:1.4; }
+      .pool { fill:#f7fcff; stroke:#afd3e9; stroke-width:1.1; }
+      .output { fill:#edf9f3; stroke:#78c5a5; stroke-width:1.3; }
+      .critic-input { fill:#fff; stroke:#dfb970; stroke-width:1.3; }
+      .critic-token { fill:#fff2dc; stroke:#ddb36e; stroke-width:1.1; }
+      .critic-module { fill:#fff; stroke:#d9ad65; stroke-width:1.4; }
+      .critic-output { fill:#fff0ef; stroke:#e19a94; stroke-width:1.3; }
+      .note { fill:#fffcf5; stroke:#dfcba3; stroke-width:1; }
+      .aux { fill:#f8f7ff; stroke:#a9a0d8; stroke-width:1.2; stroke-dasharray:6 5; }
+      .arrow { stroke:#64748b; stroke-width:1.7; fill:none; marker-end:url(#arrow); }
+      .arrow-thin { stroke:#7b8ea3; stroke-width:1.2; fill:none; marker-end:url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1080" fill="#f4f7fa"/>
+  <text x="40" y="44" class="title">alphaRM-JAX · Current Actor / Critic</text>
+  <text x="40" y="70" class="subtitle">
+    JAX / Flax · shared actor for 6 homogeneous agents · privileged centralized critic · local observation 140 / global state 191
+  </text>
+
+  <!-- Actor -->
+  <rect x="30" y="96" width="960" height="940" rx="16" class="actor-panel" filter="url(#shadow)"/>
+  <text x="55" y="136" class="panel-title">Actor (shared by all six agents)</text>
+  <text x="55" y="158" class="small">Team-canonical input; blue actions are converted back to world coordinates by the environment.</text>
+
+  <rect x="55" y="178" width="910" height="76" rx="9" class="input"/>
+  <text x="72" y="203" class="head">Observation: [M, 140]</text>
+  <text x="72" y="226" class="body">
+    self 24 · spawn 4 · center 4 · mates 2×18 · enemies 3×17 · HUD 10 · cue 3 · obstacle 8
+  </text>
+  <text x="72" y="245" class="micro">No lidar. No map CNN. Obstacle information is eight local ray distances.</text>
+  <path d="M510 254 L510 274" class="arrow"/>
+
+  <rect x="55" y="274" width="910" height="142" rx="9" fill="#fff" stroke="#d6e8f4"/>
+  <text x="72" y="297" class="head">Tokenization: 11 tokens, each projected to d=128</text>
+  <rect x="72" y="310" width="135" height="42" rx="6" class="token"/>
+  <text x="82" y="328" class="body">self</text><text x="82" y="344" class="micro">24</text>
+  <rect x="218" y="310" width="135" height="42" rx="6" class="token"/>
+  <text x="228" y="328" class="body">spawn</text><text x="228" y="344" class="micro">4</text>
+  <rect x="364" y="310" width="135" height="42" rx="6" class="token"/>
+  <text x="374" y="328" class="body">center</text><text x="374" y="344" class="micro">4</text>
+  <rect x="510" y="310" width="135" height="42" rx="6" class="token"/>
+  <text x="520" y="328" class="body">mate 1</text><text x="520" y="344" class="micro">18</text>
+  <rect x="656" y="310" width="135" height="42" rx="6" class="token"/>
+  <text x="666" y="328" class="body">mate 2</text><text x="666" y="344" class="micro">18</text>
+  <rect x="802" y="310" width="145" height="42" rx="6" class="token"/>
+  <text x="812" y="328" class="body">HUD</text><text x="812" y="344" class="micro">10</text>
+
+  <rect x="72" y="360" width="135" height="42" rx="6" class="token"/>
+  <text x="82" y="378" class="body">enemy 1</text><text x="82" y="394" class="micro">17</text>
+  <rect x="218" y="360" width="135" height="42" rx="6" class="token"/>
+  <text x="228" y="378" class="body">enemy 2</text><text x="228" y="394" class="micro">17</text>
+  <rect x="364" y="360" width="135" height="42" rx="6" class="token"/>
+  <text x="374" y="378" class="body">enemy 3</text><text x="374" y="394" class="micro">17</text>
+  <rect x="510" y="360" width="135" height="42" rx="6" class="token"/>
+  <text x="520" y="378" class="body">hit cue</text><text x="520" y="394" class="micro">3</text>
+  <rect x="656" y="360" width="135" height="42" rx="6" class="token"/>
+  <text x="666" y="378" class="body">obstacle</text><text x="666" y="394" class="micro">8</text>
+  <text x="807" y="378" class="micro">+ type embedding</text>
+  <text x="807" y="394" class="micro">+ slot embedding</text>
+  <path d="M510 416 L510 436" class="arrow"/>
+
+  <rect x="55" y="436" width="910" height="96" rx="9" class="module"/>
+  <text x="72" y="461" class="head">Transformer encoder × 2</text>
+  <text x="72" y="484" class="body">d_model 128 · 4 heads · FFN 256 · pre-norm · GELU · deterministic inference</text>
+  <text x="72" y="507" class="small">Invisible enemies and invalid cues are excluded by the attention mask.</text>
+  <path d="M510 532 L510 552" class="arrow"/>
+
+  <text x="55" y="574" class="head">Semantic pooling</text>
+  <rect x="55" y="586" width="140" height="52" rx="6" class="pool"/>
+  <text x="68" y="607" class="body">self</text><text x="68" y="624" class="micro">token 0</text>
+  <rect x="206" y="586" width="140" height="52" rx="6" class="pool"/>
+  <text x="219" y="607" class="body">map</text><text x="219" y="624" class="micro">spawn + center + obstacle</text>
+  <rect x="357" y="586" width="140" height="52" rx="6" class="pool"/>
+  <text x="370" y="607" class="body">mates</text><text x="370" y="624" class="micro">concat 2 tokens</text>
+  <rect x="508" y="586" width="140" height="52" rx="6" class="pool"/>
+  <text x="521" y="607" class="body">enemies</text><text x="521" y="624" class="micro">masked mean</text>
+  <rect x="659" y="586" width="140" height="52" rx="6" class="pool"/>
+  <text x="672" y="607" class="body">HUD</text><text x="672" y="624" class="micro">token 8</text>
+  <rect x="810" y="586" width="137" height="52" rx="6" class="pool"/>
+  <text x="823" y="607" class="body">cue</text><text x="823" y="624" class="micro">masked token</text>
+  <path d="M510 638 L510 660" class="arrow"/>
+
+  <rect x="55" y="660" width="910" height="56" rx="9" class="module"/>
+  <text x="72" y="683" class="head">Encoder projection</text>
+  <text x="72" y="704" class="body">concat 6×128 = 768 → Dense 256 → encoded [M, 256]</text>
+  <path d="M510 716 L510 738" class="arrow"/>
+
+  <rect x="55" y="738" width="910" height="72" rx="9" class="module"/>
+  <text x="72" y="762" class="head">Recurrent state</text>
+  <text x="72" y="785" class="body">GRUCell(hidden 256, input encoded 256) → recurrent hidden [M, 256]</text>
+  <text x="72" y="802" class="micro">Each agent has an independent hidden state. Training keeps hidden across rollout chunks.</text>
+  <path d="M510 810 L510 830" class="arrow"/>
+
+  <rect x="55" y="830" width="910" height="78" rx="9" class="module"/>
+  <text x="72" y="854" class="head">Policy head</text>
+  <text x="72" y="877" class="body">concat(encoded 256, recurrent hidden 256) = 512 → Dense 256 → Dense 256 → Dense 14</text>
+  <text x="72" y="896" class="micro">GELU + LayerNorm after the two hidden layers.</text>
+  <path d="M510 908 L510 928" class="arrow"/>
+
+  <rect x="55" y="928" width="910" height="82" rx="9" class="output"/>
+  <text x="72" y="951" class="head">Raw policy parameters: 14 → 6-D environment action</text>
+  <text x="72" y="974" class="body">continuous loc 4 + scale 4 · target logits 4 · fire logits 2</text>
+  <text x="72" y="995" class="small">vx, vy, yaw, spin, target {none,1,2,3}, fire {release,press}; masks are applied at distribution construction.</text>
+
+  <rect x="990" y="96" width="780" height="940" rx="16" class="critic-panel" filter="url(#shadow)"/>
+  <text x="1015" y="136" class="panel-title">Critic (centralized, team-canonical)</text>
+  <text x="1015" y="158" class="small">Two canonical views share the same Transformer and value head.</text>
+
+  <rect x="1015" y="178" width="730" height="108" rx="9" class="critic-input"/>
+  <text x="1032" y="203" class="head">Global state: [B, 191]</text>
+  <text x="1032" y="227" class="body">6 agents × 30 + 11 global features</text>
+  <text x="1032" y="250" class="small">agent 30 = 22 scalar + 8 obstacle · global 11 = score, time, occupancy, alive, HP, damage</text>
+  <text x="1032" y="272" class="micro">No global map CNN. The state already contains per-agent obstacle distances.</text>
+  <path d="M1380 286 L1380 306" class="arrow"/>
+
+  <rect x="1015" y="306" width="350" height="76" rx="8" fill="#fff7e9" stroke="#dfb970"/>
+  <text x="1032" y="330" class="head">Red canonical view</text>
+  <text x="1032" y="351" class="small">own = red 3 · opponent = blue 3</text>
+  <text x="1032" y="370" class="micro">global + 6 agent tokens</text>
+  <rect x="1395" y="306" width="350" height="76" rx="8" fill="#fff7e9" stroke="#dfb970"/>
+  <text x="1412" y="330" class="head">Blue canonical view</text>
+  <text x="1412" y="351" class="small">rotate positions/yaw 180°, swap sides</text>
+  <text x="1412" y="370" class="micro">same shared parameters</text>
+  <path d="M1190 382 L1190 404" class="arrow-thin"/>
+  <path d="M1570 382 L1570 404" class="arrow-thin"/>
+
+  <rect x="1015" y="404" width="730" height="75" rx="9" class="critic-input"/>
+  <text x="1032" y="428" class="head">Tokenization per view: 7 tokens</text>
+  <text x="1032" y="451" class="body">1 global token (11 → 192) + 6 agent tokens (30 → 192)</text>
+  <text x="1032" y="470" class="micro">slot embedding + own/opponent embedding + type embedding</text>
+  <path d="M1380 479 L1380 500" class="arrow"/>
+
+  <rect x="1015" y="500" width="730" height="104" rx="9" class="critic-module"/>
+  <text x="1032" y="525" class="head">Shared Transformer encoder × 3</text>
+  <text x="1032" y="549" class="body">d_model 192 · 4 heads · FFN 384 · pre-norm · GELU</text>
+  <text x="1032" y="572" class="small">Red and blue view batches are concatenated for one shared forward pass.</text>
+  <text x="1032" y="592" class="micro">Global token and six agent tokens attend to each other.</text>
+  <path d="M1380 604 L1380 624" class="arrow"/>
+
+  <rect x="1015" y="624" width="730" height="76" rx="9" class="critic-module"/>
+  <text x="1032" y="648" class="head">Shared per-agent value head</text>
+  <text x="1032" y="671" class="body">agent token → Dense 384 → GELU → Dense 1</text>
+  <text x="1032" y="691" class="micro">The global token is context, not an output.</text>
+  <path d="M1380 700 L1380 722" class="arrow"/>
+
+  <rect x="1015" y="722" width="730" height="94" rx="9" class="critic-output"/>
+  <text x="1032" y="746" class="head">Output: six state values [B, 6]</text>
+  <text x="1032" y="770" class="body">three values from the red view + three from the blue view</text>
+  <text x="1032" y="792" class="small">Restored to the original agent order for GAE and critic loss.</text>
+  <path d="M1380 816 L1380 838" class="arrow"/>
+
+  <rect x="1015" y="838" width="730" height="70" rx="9" class="note"/>
+  <text x="1032" y="862" class="head">Why both sides are canonical</text>
+  <text x="1032" y="885" class="small">One shared critic avoids red/blue coordinate bias while preserving six per-agent values.</text>
+  <text x="1032" y="902" class="micro">Critic has no GRU; it estimates value from the current privileged state.</text>
+
+  <rect x="1015" y="930" width="730" height="78" rx="9" class="aux"/>
+  <text x="1032" y="954" class="head">Training-only auxiliary heads (not in deployment actor)</text>
+  <text x="1032" y="977" class="body">hidden + encoded + action + obs → tracking 12 · damage 4 · heat 9 · rules 7 · self 14</text>
+  <text x="1032" y="996" class="micro">Privileged labels supervise representation learning; auxiliary weights are absent from the deployed actor graph.</text>
+
+  <rect x="30" y="1050" width="1740" height="20" rx="4" fill="#fff" stroke="#d8e1e8"/>
+  <text x="42" y="1064" class="micro">
+    Source of truth: jaxmarl/environments/rm/actor.py, critic.py and auxiliary.py. Updated for the JAX implementation, not the legacy PyTorch 10-token / d128 critic diagram.
+  </text>
+</svg>

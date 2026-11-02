@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="600" viewBox="0 0 1100 600">
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3"
+            orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L8,3 z" fill="#64748b"/>
+    </marker>
+  </defs>
+  <rect width="1100" height="600" fill="#ffffff"/>
+
+  <!-- FOV cone -->
+  <path d="M165.0,335.0 L858.0,-358.0 A980,980 0 0 1 858.0,1028.0 Z"
+        fill="#eff6ff" fill-opacity="0.65" stroke="#93c5fd" stroke-width="1.2" stroke-dasharray="7 6"/>
+  <text x="600" y="145" font-family="DejaVu Sans,Arial,sans-serif" font-size="12" fill="#64748b">observer FOV 90°</text>
+
+  <text x="550" y="38" text-anchor="middle" font-family="DejaVu Sans,Arial,sans-serif"
+        font-size="25" font-weight="bold" fill="#0f172a">visibility_arc: partial target visibility</text>
+  <text x="550" y="64" text-anchor="middle" font-family="DejaVu Sans,Arial,sans-serif"
+        font-size="14" fill="#475569">sample the target's observer-facing arc; count samples whose line-of-sight is not blocked</text>
+
+  <!-- target circle and near arc -->
+  <circle cx="840.0" cy="335.0" r="82.0" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2"/>
+  <path d="M840.0,253.0 A82.0,82.0 0 0 0 840.0,417.0"
+        fill="none" stroke="#cbd5e1" stroke-width="12" opacity="0.8"/>
+  <text x="935.0" y="330.0" font-family="DejaVu Sans,Arial,sans-serif"
+        font-size="14" font-weight="bold" fill="#334155">target circle</text>
+  <text x="935.0" y="353.0" font-family="DejaVu Sans,Arial,sans-serif"
+        font-size="12" fill="#64748b">r = 0.30 m</text>
+
+  <!-- observer -->
+  <circle cx="165.0" cy="335.0" r="30.0" fill="#dbeafe" stroke="#2563eb" stroke-width="2.5"/>
+  <text x="165.0" y="339.0" text-anchor="middle" font-family="DejaVu Sans,Arial,sans-serif"
+        font-size="12" font-weight="bold" fill="#1d4ed8">O</text>
+  <text x="150.0" y="390.0" text-anchor="middle" font-family="DejaVu Sans,Arial,sans-serif"
+        font-size="12" fill="#475569">observer</text>
+
+  <!-- occluder -->
+  <circle cx="485.0" cy="335.0" r="28.0" fill="#e2e8f0" stroke="#64748b" stroke-width="2.2"/>
+  <path d="M460.0,323.0 L482.0,323.0 L482.0,343.0 L510.0,343.0"
+        fill="none" stroke="#475569" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="485.0" y="417.0" text-anchor="middle" font-family="DejaVu Sans,Arial,sans-serif"
+        font-size="12" fill="#475569">occluder</text>
+  <text x="485.0" y="435.0" text-anchor="middle" font-family="DejaVu Sans,Arial,sans-serif"
+        font-size="11" fill="#64748b">robot / corpse / cover</text>
+
+  <!-- line of sight samples -->
+  <line x1="165.0" y1="335.0" x2="838.0" y2="417.0" stroke="#16a34a" stroke-width="1.25" opacity="0.45"/>
+<line x1="165.0" y1="335.0" x2="822.0" y2="415.0" stroke="#16a34a" stroke-width="1.25" opacity="0.45"/>
+<line x1="165.0" y1="335.0" x2="806.8" y2="410.0" stroke="#16a34a" stroke-width="1.25" opacity="0.45"/>
+<line x1="165.0" y1="335.0" x2="792.8" y2="402.0" stroke="#16a34a" stroke-width="1.25" opacity="0.45"/>
+<line x1="165.0" y1="335.0" x2="780.6" y2="391.5" stroke="#16a34a" stroke-width="1.25" opacity="0.45"/>
+<line x1="165.0" y1="335.0" x2="770.7" y2="378.9" stroke="#dc2626" stroke-width="1.25" opacity="0.45"/>
+<line x1="165.0" y1="335.0" x2="763.5" y2="364.5" stroke="#dc2626" stroke-width="1.25" opacity="0.45"/>
+<line x1="165.0" y1="335.0" x2="759.2" y2="349.0" stroke="#dc2626" stroke-width="1.25" opacity="0.45"/>
+<line x1="165.0" y1="335.0" x2="758.0" y2="333.0" stroke="#dc2626" stroke-width="1.25" opacity="0.45"/>
+<line x1="165.0" y1="335.0" x2="760.0" y2="317.0" stroke="#dc2626" stroke-width="1.25" opacity="0.45"/>
+<line x1="165.0" y1="335.0" x2="765.0" y2="301.8" stroke="#dc2626" stroke-width="1.25" opacity="0.45"/>
+<line x1="165.0" y1="335.0" x2="773.0" y2="287.8" stroke="#dc2626" stroke-width="1.25" opacity="0.45"/>
+<line x1="165.0" y1="335.0" x2="783.5" y2="275.6" stroke="#16a34a" stroke-width="1.25" opacity="0.45"/>
+<line x1="165.0" y1="335.0" x2="796.1" y2="265.7" stroke="#16a34a" stroke-width="1.25" opacity="0.45"/>
+<line x1="165.0" y1="335.0" x2="810.5" y2="258.5" stroke="#16a34a" stroke-width="1.25" opacity="0.45"/>
+<line x1="165.0" y1="335.0" x2="826.0" y2="254.2" stroke="#16a34a" stroke-width="1.25" opacity="0.45"/>
+  <circle cx="838.0" cy="417.0" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="834.0" cy="416.8" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="830.0" cy="416.4" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="826.0" cy="415.8" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="822.0" cy="415.0" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="818.1" cy="414.0" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="814.3" cy="412.9" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="810.5" cy="411.5" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="806.8" cy="410.0" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="803.1" cy="408.2" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="799.6" cy="406.3" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="796.1" cy="404.3" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="792.8" cy="402.0" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="789.6" cy="399.6" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="786.4" cy="397.1" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="783.5" cy="394.4" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="780.6" cy="391.5" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="777.9" cy="388.6" r="2.6" fill="#dc2626" opacity="0.95"/>
+<circle cx="775.4" cy="385.4" r="2.6" fill="#dc2626" opacity="0.95"/>
+<circle cx="773.0" cy="382.2" r="2.6" fill="#dc2626" opacity="0.95"/>
+<circle cx="770.7" cy="378.9" r="2.6" fill="#dc2626" opacity="0.95"/>
+<circle cx="768.7" cy="375.4" r="2.6" fill="#dc2626" opacity="0.95"/>
+<circle cx="766.8" cy="371.9" r="2.6" fill="#dc2626" opacity="0.95"/>
+<circle cx="765.0" cy="368.2" r="2.6" fill="#dc2626" opacity="0.95"/>
+<circle cx="763.5" cy="364.5" r="2.6" fill="#dc2626" opacity="0.95"/>
+<circle cx="762.1" cy="360.7" r="2.6" fill="#dc2626" opacity="0.95"/>
+<circle cx="761.0" cy="356.9" r="2.6" fill="#dc2626" opacity="0.95"/>
+<circle cx="760.0" cy="353.0" r="2.6" fill="#dc2626" opacity="0.95"/>
+<circle cx="759.2" cy="349.0" r="2.6" fill="#dc2626" opacity="0.95"/>
+<circle cx="758.6" cy="345.0" r="2.6" fill="#dc2626" opacity="0.95"/>
+<circle cx="758.2" cy="341.0" r="2.6" fill="#dc2626" opacity="0.95"/>
+<circle cx="758.0" cy="337.0" r="2.6" fill="#dc2626" opacity="0.95"/>
+<circle cx="758.0" cy="333.0" r="2.6" fill="#dc2626" opacity="0.95"/>
+<circle cx="758.2" cy="329.0" r="2.6" fill="#dc2626" opacity="0.95"/>
+<circle cx="758.6" cy="325.0" r="2.6" fill="#dc2626" opacity="0.95"/>
+<circle cx="759.2" cy="321.0" r="2.6" fill="#dc2626" opacity="0.95"/>
+<circle cx="760.0" cy="317.0" r="2.6" fill="#dc2626" opacity="0.95"/>
+<circle cx="761.0" cy="313.1" r="2.6" fill="#dc2626" opacity="0.95"/>
+<circle cx="762.1" cy="309.3" r="2.6" fill="#dc2626" opacity="0.95"/>
+<circle cx="763.5" cy="305.5" r="2.6" fill="#dc2626" opacity="0.95"/>
+<circle cx="765.0" cy="301.8" r="2.6" fill="#dc2626" opacity="0.95"/>
+<circle cx="766.8" cy="298.1" r="2.6" fill="#dc2626" opacity="0.95"/>
+<circle cx="768.7" cy="294.6" r="2.6" fill="#dc2626" opacity="0.95"/>
+<circle cx="770.7" cy="291.1" r="2.6" fill="#dc2626" opacity="0.95"/>
+<circle cx="773.0" cy="287.8" r="2.6" fill="#dc2626" opacity="0.95"/>
+<circle cx="775.4" cy="284.6" r="2.6" fill="#dc2626" opacity="0.95"/>
+<circle cx="777.9" cy="281.4" r="2.6" fill="#dc2626" opacity="0.95"/>
+<circle cx="780.6" cy="278.5" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="783.5" cy="275.6" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="786.4" cy="272.9" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="789.6" cy="270.4" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="792.8" cy="268.0" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="796.1" cy="265.7" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="799.6" cy="263.7" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="803.1" cy="261.8" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="806.8" cy="260.0" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="810.5" cy="258.5" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="814.3" cy="257.1" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="818.1" cy="256.0" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="822.0" cy="255.0" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="826.0" cy="254.2" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="830.0" cy="253.6" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="834.0" cy="253.2" r="2.6" fill="#16a34a" opacity="0.95"/>
+<circle cx="838.0" cy="253.0" r="2.6" fill="#16a34a" opacity="0.95"/>
+
+  <!-- target arc labels -->
+  <text x="830.0" y="230.0" text-anchor="middle" font-family="DejaVu Sans,Arial,sans-serif"
+        font-size="12" fill="#64748b">near-side arc sampled</text>
+  <text x="830.0" y="200.0" text-anchor="middle" font-family="DejaVu Sans,Arial,sans-serif"
+        font-size="11" fill="#94a3b8">≈ 120° when touching; ≈180° far away</text>
+
+  <!-- legend / formula panel -->
+  <rect x="735" y="438" width="320" height="128" rx="14" fill="#f8fafc" stroke="#cbd5e1"/>
+  <circle cx="758" cy="466" r="4" fill="#16a34a"/>
+  <text x="772" y="471" font-family="DejaVu Sans,Arial,sans-serif" font-size="13" fill="#334155">visible sample</text>
+  <circle cx="758" cy="491" r="4" fill="#dc2626"/>
+  <text x="772" y="496" font-family="DejaVu Sans,Arial,sans-serif" font-size="13" fill="#334155">blocked sample</text>
+  <text x="752" y="522" font-family="DejaVu Sans,Arial,sans-serif" font-size="13" fill="#0f172a" font-weight="bold">
+    p_vis = visible / 64 = 34/64 ≈ 0.531
+  </text>
+  <text x="752" y="543" font-family="DejaVu Sans,Arial,sans-serif" font-size="11" fill="#64748b">
+    observation uses 16 samples; firing uses 64
+  </text>
+
+  <text x="550" y="582" text-anchor="middle" font-family="DejaVu Sans,Arial,sans-serif"
+        font-size="12" fill="#64748b">p_vis is a fraction of the observer-facing arc, not a binary “seen / not seen”.</text>
+</svg>

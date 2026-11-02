@@ -17,6 +17,11 @@
 
 训练输出和 checkpoint 默认不进入 Git，使用 `.gitignore` 排除。
 
+![alphaRM-JAX 浏览器演示](docs/assets/alphaRM_jax_demo.png)
+
+> 在线演示：https://captainkaz.github.io/alphaRM-JAX/  
+> 默认六台 AI 自战；退出观战后接管当前机器人。
+
 ## 能做什么
 
 | 模块 | 能力 |
@@ -64,7 +69,117 @@
 - Critic：红蓝两个 canonical 视角，3 层 Transformer（d=192，4 heads，FFN=384），共享 value head，输出 6 个 value
 - 无 lidar、无地图 CNN；局部障碍信息是 8 向射线距离
 
+![alphaRM-JAX actor / critic 结构图](docs/assets/rm_jax_actor_critic_arch.svg)
+
+> 当前图对应 JAX 代码：actor 11 tokens、GRU 输入 256 维 encoder；critic 是 3 层、d=192。
+
 完整结构见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
+
+## 规则与设计摘要
+
+完整规则见 [docs/RULES.md](docs/RULES.md)。规则书用于解释设计；实现数值以
+`jaxmarl/environments/rm/config.py` 和 `env.py` 为准。
+
+### 观测与信息不对称
+
+| token | 内容 |
+|---|---|
+| self | 自身位置、速度、朝向、HP、热量、存活、目标、资源、8 向障碍距离 |
+| spawn / center | 己方启动区与中心圈信息 |
+| 2 × mate | 队友位置、速度、朝向、HP、热量、存活、复活倒计时 |
+| 3 × enemy | 可见性、相对/绝对位置、速度、带噪 HP/朝向、开火、无敌、复活 |
+| HUD | 双方比分、剩余时间、占点人数、队伍存活和总 HP |
+| hit cue | 受击方向提示，带角度噪声 |
+| obstacle | 独立 token，包含 8 向墙/掩体距离 |
+
+不可见敌人和无效 cue 会被 attention mask 排除。队友信息共享；敌人信息受 FOV、
+遮挡、距离和观测噪声限制。Actor 不读取全局地图或完整仿真状态。
+
+### 动作与掩码
+
+```text
+[vx, vy, yaw, spin, target, fire]
+```
+
+- `target=0` 总是合法；敌人槽位要求存活、可见且在 12 m 锁定范围内。
+- `fire=0` 总是合法；开火要求已有目标、射手存活、非无敌、未过热、热量未满且目标非无敌。
+- 蓝方动作在环境内部做队伍 canonical 处理，输出动作再转换回世界系。
+
+### 计分与终局
+
+- 中心占点按红蓝净人数计分，每名净优势每帧贡献 `0.1` 分。
+- 击杀 `+10` 分，先到 `90` 分立即结束。
+- 时间到后依次比较比分、总伤害、存活总 HP。
+- 10 s 无战斗/占点/回血事件触发空局。
+- 碰撞、持续推墙和持续推人都有独立终局码。
+
+| 终局码 | 含义 |
+|---|---|
+| 1 / 2 | 红/蓝先到目标分 |
+| 3 / 4 | 红/蓝时间胜 |
+| 5 / 6 | 红/蓝伤害 tiebreak |
+| 7 / 8 | 红/蓝血量 tiebreak |
+| 9 / 10 | 红/蓝因对方碰撞犯规获胜 |
+| 20–22 | 时间 / 同帧 200 / 同帧犯规平局 |
+| 23 | 10 s 无事件空局 |
+| 24–26 | 推墙/掩体犯规：红胜 / 蓝胜 / 双方 |
+| 27–29 | 推人犯规：红胜 / 蓝胜 / 双方 |
+
+### 训练奖励
+
+终局和 dense 奖励并存：
+
+- 正常胜负包含基础胜负、剩余时间和分差项。
+- 占点、命中/伤害、接近中心、存活和低血回家有 dense reward。
+- 贴人、墙/掩体接触、持续推挤和高速冲击有连续惩罚。
+- 最新 1200 轮训练关闭了**推人终局**（`--no-body-push-terminal`），但仍保留推人 dense 惩罚。
+- 严格部署评测默认保留推墙/推人终局，因此训练目标和最终规则分布存在已知差异。
+
+奖励系数以 `jaxmarl/environments/rm/config.py` 的 `k_*`、`terminal_*` 字段为准。
+
+### 命中率模型
+
+瞄准不等于必中。命中率由距离、自身移动、目标横穿、可见弧、命中率低通和目标小陀螺共同决定：
+
+```text
+p_base  = p_dist × p_self × p_motion × p_vis
+p_ideal = min(p_base, 1 - 0.1 × s_self)
+p_t     ← p_t + α × (p_ideal - p_t)
+p_final = p_t × (1 - 0.4 × s_target)
+damage/frame = 30 × p_final
+```
+
+其中：
+
+```text
+p_dist   = max(0, 1 - ((distance - 1) / 11)^2)
+p_self   = 1 - 0.25 × min(1, |v_self| / 3)
+p_motion = 1 / (1 + (ω / 0.75)^2)
+```
+
+![命中率流水线](docs/assets/rm_hitrate_pipeline.svg)
+
+![距离因子](docs/assets/rm_hitrate_distance.svg)
+
+![命中率各因子](docs/assets/rm_hitrate_factors.svg)
+
+![p_base 热力图](docs/assets/rm_hitrate_base_heatmap.svg)
+
+> 曲线假设 `p_self = p_vis = 1`。实际开火还要求角度误差小于 1°、目标可见、
+> 距离小于 12 m、未过热且 fire 指令为 1。
+
+### 可见弧
+
+![可见弧示意](docs/assets/rm_visibility_arc.svg)
+
+可见性不是只测目标圆心，而是在目标圆朝向观察者的一侧采样：
+
+- 观测/锁定：16 个采样点
+- 开火/伤害：64 个采样点
+- 绿色可见点比例即 `p_vis`
+- `p_vis > 0` 即可锁定，但命中率会乘以 `p_vis`
+
+所以目标只露出一部分时仍可攻击，只是命中概率更低。
 
 ## 安装
 

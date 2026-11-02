@@ -93,6 +93,8 @@ self 24
 
 部署推理只需要 `RmActor`；辅助头不进入 actor 推理图。
 
+![Actor / Critic 结构](assets/rm_jax_actor_critic_arch.svg)
+
 ## 4. Critic
 
 Critic 输入 `[B,191]`：
