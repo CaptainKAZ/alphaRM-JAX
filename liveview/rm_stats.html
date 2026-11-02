@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>RM 3v3 · 训练统计</title>
+<style>
+  :root {
+    --bg:#0d1117; --panel:#161b22; --line:#30363d; --fg:#e6edf3; --muted:#8b949e;
+    --red:#ff5c5c; --blue:#58a6ff; --green:#3fb950; --yellow:#d29922; --purple:#bc8cff;
+  }
+  * { box-sizing:border-box; }
+  html, body { margin:0; background:var(--bg); color:var(--fg);
+    font-family:system-ui,"Noto Sans CJK SC",sans-serif; overflow-x:hidden; }
+  body { min-height:100dvh; }
+  #app { max-width:1600px; margin:0 auto; padding:0 14px 28px; min-width:0; }
+  header { display:flex; gap:12px; align-items:center; padding:12px 0;
+    border-bottom:1px solid var(--line); flex-wrap:wrap; min-width:0; }
+  header h1 { font-size:16px; margin:0; font-weight:650; }
+  .pill { padding:3px 9px; border:1px solid var(--line); border-radius:999px;
+    color:var(--muted); font-size:12px; white-space:nowrap; }
+  .pill b { color:var(--fg); }
+  a { color:var(--blue); text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  .grid { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);
+    gap:14px; margin-top:14px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    padding:12px; min-width:0; }
+  .card h2 { font-size:13px; margin:0 0 4px; font-weight:600; }
+  .sub { color:var(--muted); font-size:12px; margin:0 0 10px; }
+  .chartBox { position:relative; height:360px; }
+  .chartBox.small { height:300px; }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  button { background:#21262d; color:var(--fg); border:1px solid var(--line);
+    border-radius:7px; padding:6px 10px; cursor:pointer; font-size:12px; }
+  button:hover { background:#30363d; }
+  button.active { border-color:var(--blue); background:#1f6feb33; color:var(--blue); }
+  .note { color:var(--muted); font-size:12px; margin-top:8px; }
+  .warn { color:var(--yellow); }
+  table { width:100%; border-collapse:collapse; margin-top:12px; font-size:12px;
+    font-variant-numeric:tabular-nums; min-width:680px; }
+  th, td { text-align:right; padding:6px 7px; border-bottom:1px solid #21262d;
+    white-space:nowrap; }
+  th:first-child, td:first-child { text-align:left; }
+  th { color:var(--muted); font-weight:500; position:sticky; top:0; background:var(--panel); }
+  .legendNote { font-size:11px; color:var(--muted); margin-top:6px; }
+  html.embed #app > header { display:none; }
+  html.embed #app { padding-top:8px; }
+  button { min-height:34px; touch-action:manipulation; }
+  @media (max-width: 1050px) {
+    .grid { grid-template-columns:1fr; }
+    .chartBox { height:330px; }
+  }
+  @media (max-width: 700px) {
+    #app { padding:0 8px 24px; }
+    header { gap:6px 8px; padding:9px 0; }
+    header h1 { width:100%; font-size:14px; }
+    .pill { font-size:11px; padding:2px 7px; }
+    .grid { gap:10px; margin-top:10px; }
+    .card { padding:10px; border-radius:8px; }
+    .card h2 { font-size:12px; }
+    .sub, .note, .legendNote { font-size:11px; }
+    .chartBox { height:clamp(240px, 44vh, 330px); }
+    .chartBox.small { height:clamp(220px, 38vh, 280px); }
+    .row button { flex:1 1 auto; min-height:38px; }
+    table { font-size:11px; min-width:660px; }
+    th, td { padding:5px 6px; }
+    #app > section.card { margin-top:10px !important; }
+  }
+</style>
+<script>
+  if (new URLSearchParams(location.search).has("embed")) {
+    document.documentElement.classList.add("embed");
+  }
+</script>
+</head>
+<body>
+<div id="app">
+<header>
+  <h1>RM 3v3 · 训练统计</h1>
+  <span class="pill" id="iter">iter -</span>
+  <span class="pill" id="status">—</span>
+  <span class="pill" id="updated">—</span>
+  <span style="flex:1"></span>
+  <a class="pill" href="/" target="_blank">← 片段观察窗</a>
+  <a class="pill" href="/files" target="_blank">文件</a>
+</header>
+
+<div class="grid">
+  <section class="card">
+    <h2>不同终局占比曲线</h2>
+    <p class="sub">新训练统计整个 batch 的所有结束局；旧训练为 10 个抽样片段。0 = 片段内尚未结束。</p>
+    <div class="chartBox"><canvas id="outcomeChart"></canvas></div>
+    <div class="legendNote" id="outcomeNote">等待训练数据…</div>
+  </section>
+
+  <section class="card">
+    <h2>每 iter 得分：平均 / 最大</h2>
+    <p class="sub">默认统计片段内红+蓝得分增量，也可看片段末总分；新训练覆盖全 batch 轨迹。</p>
+    <div class="row" style="margin-bottom:8px">
+      <button id="metricDelta" class="active">片段内得分增量</button>
+      <button id="metricFinal">片段末总分</button>
+    </div>
+    <div class="chartBox small"><canvas id="scoreChart"></canvas></div>
+    <div class="note" id="scoreNote">—</div>
+  </section>
+</div>
+
+<section class="card" style="margin-top:14px">
+  <h2>最新 iter · 每条轨迹得分增量分布</h2>
+  <p class="sub">全 batch 每条轨迹在本片段内的红+蓝得分增量；旧训练没有这个字段时会显示提示。</p>
+  <div class="chartBox small"><canvas id="histChart"></canvas></div>
+  <div class="note" id="histNote">等待全量轨迹数据…</div>
+</section>
+
+<section class="card" style="margin-top:14px">
+  <h2>最近 iter 明细</h2>
+  <div style="overflow:auto">
+    <table>
+      <thead><tr><th>iter</th><th>轨迹</th><th>已结束</th><th>平均增量</th><th>最大增量</th><th>平均总分</th><th>最大总分</th><th>主要终局</th></tr></thead>
+      <tbody id="tbody"><tr><td colspan="8" class="muted">等待数据…</td></tr></tbody>
+    </table>
+  </div>
+</section>
+</div>
+
+<script src="/chart.umd.min.js"></script>
+<script>
+const COLORS = ["#8b949e","#ff5c5c","#58a6ff","#3fb950","#d29922","#bc8cff","#39c5cf","#f0883e","#db61a2","#7ee787","#ffa657","#79c0ff","#d2a8ff","#56d364","#e3b341"];
+let outcomeChart = null, scoreChart = null, histChart = null, metric = "delta";
+let names = {}, history = [];
+
+function fmt(v, d=1) { return Number(v || 0).toFixed(d); }
+function isMobile() { return window.innerWidth <= 700; }
+function colorFor(code, idx) {
+  if (String(code) === "0") return "#6e7681";
+  return COLORS[(Number(code) + idx) % COLORS.length];
+}
+function shortName(code) {
+  const n = names[String(code)] || (String(code) === "0" ? "进行中" : `码 ${code}`);
+  return n.length > 16 ? n.slice(0, 15) + "…" : n;
+}
+
+function recordDenom(r) {
+  // 新数据按“已结束局”算占比；旧数据只有 10 个抽样片段，按片段数算。
+  return Number(r.source === "all" ? (r.n_terminal || r.n_trajectories || 1) : (r.n_clips || 1));
+}
+
+function outcomeSeries(rows) {
+  const codes = new Set();
+  rows.forEach(r => Object.keys(r.outcome_counts || {}).forEach(c => codes.add(String(c))));
+  const ordered = Array.from(codes).sort((a,b) => {
+    if (a === "0") return -1;
+    if (b === "0") return 1;
+    return Number(a) - Number(b);
+  });
+  const labels = rows.map(r => r.iter);
+  return {
+    labels,
+    datasets: ordered.map((code, i) => ({
+      label: shortName(code),
+      data: rows.map(r => {
+        const n = Math.max(1, recordDenom(r));
+        return 100.0 * Number((r.outcome_counts || {})[code] || 0) / n;
+      }),
+      borderColor: colorFor(code, i),
+      backgroundColor: colorFor(code, i),
+      borderWidth: code === "0" ? 1.2 : 1.8,
+      borderDash: code === "0" ? [5,4] : [],
+      pointRadius: 2,
+      tension: 0.18,
+      spanGaps: true,
+    })),
+  };
+}
+
+function makeOutcomeChart() {
+  const ctx = document.getElementById("outcomeChart");
+  if (!ctx) return;
+  if (outcomeChart) outcomeChart.destroy();
+  outcomeChart = new Chart(ctx, {
+    type: "line",
+    data: outcomeSeries(history),
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      interaction: { mode: "index", intersect: false },
+      scales: {
+        x: { title: { display: true, text: "iter", color: "#8b949e" },
+             ticks: { color:"#8b949e", maxTicksLimit: isMobile() ? 6 : 14, maxRotation: 0 },
+             grid: { color:"#21262d" } },
+        y: { min: 0, max: 100, title: { display: true, text: "占比 %", color: "#8b949e" },
+             ticks: { color:"#8b949e", callback: v => v + "%" }, grid: { color:"#21262d" } },
+      },
+      plugins: {
+        legend: { position: "bottom", labels: {
+          color:"#c9d1d9", boxWidth: isMobile() ? 8 : 10, boxHeight: isMobile() ? 8 : 10,
+          font: { size: isMobile() ? 9 : 10 }, padding: isMobile() ? 5 : 8,
+        } },
+        tooltip: {
+          callbacks: {
+            title: items => items.length ? `iter ${items[0].label}` : "",
+            label: c => `${c.dataset.label}: ${c.parsed.y.toFixed(1)}%`,
+          },
+        },
+      },
+    },
+  });
+}
+
+function scoreSeries(rows) {
+  const delta = metric === "delta";
+  return {
+    labels: rows.map(r => r.iter),
+    datasets: [
+      {
+        label: delta ? "平均得分增量" : "平均总分",
+        data: rows.map(r => delta ? r.score_delta_mean : r.score_final_mean),
+        borderColor: "#58a6ff", backgroundColor: "#58a6ff",
+        borderWidth: 2, pointRadius: 2, tension: 0.18,
+      },
+      {
+        label: delta ? "最大得分增量" : "最大总分",
+        data: rows.map(r => delta ? r.score_delta_max : r.score_final_max),
+        borderColor: "#ffa657", backgroundColor: "#ffa657",
+        borderWidth: 2, pointRadius: 2, tension: 0.18,
+      },
+    ],
+  };
+}
+
+function makeScoreChart() {
+  const ctx = document.getElementById("scoreChart");
+  if (!ctx) return;
+  if (scoreChart) scoreChart.destroy();
+  scoreChart = new Chart(ctx, {
+    type: "line",
+    data: scoreSeries(history),
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      interaction: { mode: "index", intersect: false },
+      scales: {
+        x: { title: { display: true, text: "iter", color: "#8b949e" },
+             ticks: { color:"#8b949e", maxTicksLimit: isMobile() ? 6 : 14, maxRotation: 0 },
+             grid: { color:"#21262d" } },
+        y: { beginAtZero: true, title: { display: true, text: "红+蓝得分", color: "#8b949e" },
+             ticks: { color:"#8b949e" }, grid: { color:"#21262d" } },
+      },
+      plugins: {
+        legend: { position: "bottom", labels: {
+          color:"#c9d1d9", boxWidth: isMobile() ? 8 : 10, boxHeight: isMobile() ? 8 : 10,
+          font: { size: isMobile() ? 10 : 11 }, padding: isMobile() ? 4 : 8,
+        } },
+        tooltip: { callbacks: { title: items => items.length ? `iter ${items[0].label}` : "", label: c => `${c.dataset.label}: ${Number(c.parsed.y).toFixed(2)}` } },
+      },
+    },
+  });
+}
+
+function makeHistogram(latest) {
+  const ctx = document.getElementById("histChart");
+  if (!ctx) return;
+  if (histChart) histChart.destroy();
+  const raw = latest && Array.isArray(latest.trajectory_score_deltas)
+    ? latest.trajectory_score_deltas.map(Number).filter(v => Number.isFinite(v))
+    : [];
+  if (!raw.length) {
+    histChart = new Chart(ctx, {
+      type: "bar",
+      data: { labels: [], datasets: [] },
+      options: { responsive: true, maintainAspectRatio: false, animation: false,
+        plugins: { legend: { display: false } },
+        scales: { x: { ticks: { color:"#8b949e" }, grid: { display:false } },
+                  y: { beginAtZero:true, ticks: { color:"#8b949e" }, grid: { color:"#21262d" } } } },
+    });
+    document.getElementById("histNote").textContent =
+      "当前训练仍只写 10 个抽样片段；下一次训练启动后，后端会写全 batch 每条轨迹的增量。";
+    return;
+  }
+  const min = Math.min(...raw), max = Math.max(...raw);
+  const bins = 20;
+  const width = (max - min) / bins || 1;
+  const counts = new Array(bins).fill(0);
+  raw.forEach(v => {
+    let k = Math.floor((v - min) / width);
+    if (k < 0) k = 0;
+    if (k >= bins) k = bins - 1;
+    counts[k] += 1;
+  });
+  const labels = counts.map((_, i) => (min + (i + 0.5) * width).toFixed(1));
+  histChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{ label: "轨迹数", data: counts,
+        backgroundColor: "rgba(88,166,255,.65)", borderColor: "#58a6ff", borderWidth: 1 }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { title: items => `得分增量 ${items[0].label}`, label: c => `${c.parsed.y} 条轨迹` } } },
+      scales: {
+        x: { title: { display: true, text: "本片段红+蓝得分增量", color: "#8b949e" },
+             ticks: { color:"#8b949e", maxTicksLimit: isMobile() ? 5 : 12, maxRotation: 0 },
+             grid: { display:false } },
+        y: { beginAtZero:true, title: { display: true, text: "轨迹数", color: "#8b949e" },
+             ticks: { color:"#8b949e", precision:0 }, grid: { color:"#21262d" } },
+      },
+    },
+  });
+  document.getElementById("histNote").textContent =
+    `iter ${latest.iter}：${raw.length} 条轨迹，均值 ${((raw.reduce((a,b)=>a+b,0))/raw.length).toFixed(2)}，最小 ${min.toFixed(2)}，最大 ${max.toFixed(2)}。`;
+}
+
+function updateTable(rows) {
+  const tb = document.getElementById("tbody");
+  if (!rows.length) {
+    tb.innerHTML = '<tr><td colspan="8" class="muted">等待数据…</td></tr>';
+    return;
+  }
+  tb.innerHTML = rows.slice(-10).reverse().map(r => {
+    let top = "—";
+    const counts = Object.entries(r.outcome_counts || {}).sort((a,b) => b[1]-a[1]);
+    if (counts.length) {
+      top = counts.slice(0,3).map(([c,v]) => `${shortName(c)} ${v}`).join(" · ");
+    }
+    return `<tr>
+      <td>${r.iter}</td><td>${r.n_trajectories || r.n_clips || 0}</td><td>${r.n_terminal || 0}</td>
+      <td>${fmt(r.score_delta_mean, 2)}</td><td>${fmt(r.score_delta_max, 2)}</td>
+      <td>${fmt(r.score_final_mean, 2)}</td><td>${fmt(r.score_final_max, 2)}</td>
+      <td style="text-align:left">${top}</td>
+    </tr>`;
+  }).join("");
+}
+
+function render(j) {
+  names = j.outcome_names || {};
+  history = Array.isArray(j.history) ? j.history : [];
+  document.getElementById("iter").textContent = history.length ? `iter ${history[history.length-1].iter}` : "iter -";
+  document.getElementById("status").textContent = Number(j.training_processes || 0) > 0 ? "训练中" : "训练未运行";
+  document.getElementById("updated").textContent = "更新 " + new Date((j.updated || Date.now()/1000)*1000).toLocaleTimeString();
+  const latest = history[history.length - 1];
+  document.getElementById("outcomeNote").textContent = history.length
+    ? `已记录 ${history.length} 个 iter；最新 ${latest.source === "all" ? `全 batch ${latest.n_trajectories || 0} 条轨迹、${latest.n_terminal || 0} 个已结束局` : `${latest.n_clips || 0} 个抽样片段`}。`
+    : "等待训练写入数据…";
+  document.getElementById("scoreNote").textContent = latest
+    ? `${latest.source === "all" ? `全 batch ${latest.n_trajectories || 0} 条轨迹` : "当前 iter 的 10 个片段"}：平均增量 ${fmt(latest.score_delta_mean,2)}，最大增量 ${fmt(latest.score_delta_max,2)}；平均总分 ${fmt(latest.score_final_mean,2)}，最大总分 ${fmt(latest.score_final_max,2)}。`
+    : "等待数据…";
+  makeOutcomeChart();
+  makeScoreChart();
+  makeHistogram(latest);
+  updateTable(history);
+}
+
+async function tick() {
+  try {
+    const r = await fetch("/rm_stats.json?ts=" + Date.now(), {cache:"no-store"});
+    if (!r.ok) return;
+    render(await r.json());
+  } catch (e) { /* ignore */ }
+}
+
+document.getElementById("metricDelta").onclick = () => {
+  metric = "delta";
+  document.getElementById("metricDelta").classList.add("active");
+  document.getElementById("metricFinal").classList.remove("active");
+  makeScoreChart();
+};
+document.getElementById("metricFinal").onclick = () => {
+  metric = "final";
+  document.getElementById("metricFinal").classList.add("active");
+  document.getElementById("metricDelta").classList.remove("active");
+  makeScoreChart();
+};
+tick();
+setInterval(tick, 2500);
+</script>
+</body>
+</html>
