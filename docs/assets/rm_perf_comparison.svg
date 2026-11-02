@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="660" viewBox="0 0 1200 660">
+  <defs>
+    <style>
+      text { font-family:"Noto Sans CJK SC","Microsoft YaHei",sans-serif; fill:#172033; }
+      .title { font-size:30px; font-weight:700; }
+      .subtitle { font-size:14px; fill:#5b6b7e; }
+      .section { font-size:19px; font-weight:700; }
+      .label { font-size:14px; }
+      .value { font-size:14px; font-weight:700; }
+      .small { font-size:11.5px; fill:#607086; }
+      .torch { fill:#ef7d72; }
+      .basic { fill:#4ca6e8; }
+      .league { fill:#4cbf8b; }
+      .axis { stroke:#9aa8b7; stroke-width:1.2; }
+      .grid { stroke:#dbe3eb; stroke-width:1; }
+      .card { fill:#f7f9fc; stroke:#d7e1ea; stroke-width:1.2; }
+    </style>
+  </defs>
+
+  <rect width="1200" height="660" fill="#f2f5f8"/>
+  <text x="42" y="46" class="title">alphaRM: JAX vs Torch/VMAS performance</text>
+  <text x="42" y="72" class="subtitle">B=800 · T=200 · 160,000 environment steps per iteration · RTX 3080 Ti 12 GB</text>
+
+  <rect x="36" y="98" width="1128" height="218" rx="14" class="card"/>
+  <text x="58" y="130" class="section">Steady-state iteration time</text>
+  <text x="58" y="153" class="small">Lower is better · medians after warm-up/compile</text>
+
+  <line x1="260" y1="184" x2="1125" y2="184" class="axis"/>
+  <line x1="260" y1="240" x2="1125" y2="240" class="axis"/>
+  <line x1="260" y1="296" x2="1125" y2="296" class="axis"/>
+
+  <text x="58" y="205" class="label">Torch v64</text>
+  <rect x="260" y="186" width="763" height="32" rx="5" class="torch"/>
+  <text x="1035" y="207" class="value">159.1 s</text>
+
+  <text x="58" y="261" class="label">JAX basic</text>
+  <rect x="260" y="242" width="257" height="32" rx="5" class="basic"/>
+  <text x="529" y="263" class="value">53.6 s</text>
+
+  <text x="58" y="317" class="label">JAX league + aux</text>
+  <rect x="260" y="298" width="312" height="32" rx="5" class="league"/>
+  <text x="584" y="319" class="value">65.0 s</text>
+
+  <rect x="36" y="338" width="1128" height="218" rx="14" class="card"/>
+  <text x="58" y="370" class="section">End-to-end throughput</text>
+  <text x="58" y="393" class="small">Environment steps per second · higher is better</text>
+
+  <line x1="260" y1="424" x2="1125" y2="424" class="axis"/>
+  <line x1="260" y1="480" x2="1125" y2="480" class="axis"/>
+  <line x1="260" y1="536" x2="1125" y2="536" class="axis"/>
+
+  <text x="58" y="445" class="label">Torch v64</text>
+  <rect x="260" y="426" width="201" height="32" rx="5" class="torch"/>
+  <text x="473" y="447" class="value">1,005 step/s</text>
+
+  <text x="58" y="501" class="label">JAX basic</text>
+  <rect x="260" y="482" width="597" height="32" rx="5" class="basic"/>
+  <text x="869" y="503" class="value">2,986 step/s</text>
+
+  <text x="58" y="557" class="label">JAX league + aux</text>
+  <rect x="260" y="538" width="492" height="32" rx="5" class="league"/>
+  <text x="764" y="559" class="value">2,460 step/s</text>
+
+  <rect x="36" y="578" width="1128" height="58" rx="12" fill="#fffaf0" stroke="#ead5ad"/>
+  <text x="58" y="602" class="small">
+    Rollout/collection: Torch 94.4 s vs JAX 1.27 s ≈ 74×. PPO update remains the JAX bottleneck:
+    about 52–60 s and does not show the same order-of-magnitude gain.
+  </text>
+  <text x="58" y="622" class="small">
+    First JAX iteration includes XLA compilation (about 191.6 s). Torch has no equivalent compile step.
+    Configs differ in critic size and update strategy; see docs/PERFORMANCE.md.
+  </text>
+</svg>

@@ -12,7 +12,7 @@
 - **PyTorch/VMAS 参考实现：** [CaptainKAZ/alphaRM](https://github.com/CaptainKAZ/alphaRM)
 - **提交规范：** [`CONTRIBUTING.md`](CONTRIBUTING.md)
 
-[快速开始](#2-快速开始) · [环境与规则](#3-环境规则与命中模型) · [网络与训练](#4-网络训练与-aux-loss) · [评测](#5-评测与当前结果) · [仓库结构](#6-仓库结构)
+[快速开始](#2-快速开始) · [环境与规则](#3-环境规则与命中模型) · [网络与训练](#4-网络训练与-aux-loss) · [性能](#5-性能jax-vs-torch) · [评测](#6-评测与当前结果) · [仓库结构](#7-仓库结构)
 
 ---
 
@@ -445,7 +445,35 @@ actor_loss = PPO_loss + aux_coef × aux_total
 
 ---
 
-## 5. 评测与当前结果
+## 5. 性能：JAX vs Torch
+
+JAX 最大的优势是把 **800 个向量化环境 + 200 步 recurrent rollout** 编译进 GPU。
+
+![JAX 与 Torch 性能对比](docs/assets/rm_perf_comparison.svg)
+
+相同 `B=800`、`T=200`，每 iter `160,000` 个环境步：
+
+| 阶段 | Torch v64 | JAX basic | JAX league + aux |
+|---|---:|---:|---:|
+| rollout / collection | **94.4 s** | **1.27 s** | **2.25 s** |
+| PPO update / launch | **62.3 s** | **52.3 s** | **60.4 s** |
+| 完整 iteration | **159.1 s** | **53.6 s** | **65.0 s** |
+| 吞吐 | **1,005 step/s** | **2,986 step/s** | **2,460 step/s** |
+
+结论：
+
+- 完整训练约 **2.4–3×** 加速。
+- rollout 约 **74×**；这是 JAX 最大收益。
+- 纯 PPO update 没有数量级优势，JAX warm 后仍约 **52–60 s/iter**。
+- JAX 首次 iteration 含 XLA 编译约 **191.6 s**，Torch 没有这一项。
+- JAX cold500 实际总时长 **7h32m**；JAX 900→1200 为 **5h20m**。
+
+详细测量口径、原始日志路径和不可直接横比的配置差异见
+[`docs/PERFORMANCE.md`](docs/PERFORMANCE.md)。
+
+---
+
+## 6. 评测与当前结果
 
 最后联赛评估：
 
@@ -483,7 +511,7 @@ outputs/rm_jax_league900_1200/league_eval.json
 
 ---
 
-## 6. 仓库结构
+## 7. 仓库结构
 
 ```text
 alphaRM-JAX/
@@ -509,9 +537,9 @@ alphaRM-JAX/
 
 ---
 
-## 7. 开发、测试与已知限制
+## 8. 开发、测试与已知限制
 
-### 7.1 快速检查
+### 8.1 快速检查
 
 ```bash
 python -m compileall jaxmarl/environments/rm baselines/MAPPO liveview human_jax_server.py
@@ -526,7 +554,7 @@ python -m pytest parity/test_ppo_math.py -q
 
 提交信息采用 Conventional Commits，详细规则见 [`CONTRIBUTING.md`](CONTRIBUTING.md)。
 
-### 7.2 已知限制
+### 8.2 已知限制
 
 - 固定 reset、普通移动、dense reward、global state、actor/critic 已做 Torch/JAX 对拍。
 - 碰撞/推挤后的物理残差、random reset 的 RNG 和观测噪声仍可能有差异。
@@ -536,13 +564,14 @@ python -m pytest parity/test_ppo_math.py -q
 
 ---
 
-## 8. 文档、上游与许可
+## 9. 文档、上游与许可
 
 | 文档 | 内容 |
 |---|---|
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 代码分层、环境、网络和 Web 运行时 |
 | [`docs/AUX_LOSS.md`](docs/AUX_LOSS.md) | 五类辅助目标、渐消位置 loss、权重和指标 |
 | [`docs/TRAINING_AND_EVALUATION.md`](docs/TRAINING_AND_EVALUATION.md) | 1200 轮配方、恢复、评测 |
+| [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md) | Torch/JAX rollout、update、总时长和测量口径 |
 | [`docs/IMPLEMENTATION_NOTES.md`](docs/IMPLEMENTATION_NOTES.md) | JAX 实现口径和 parity 状态 |
 | [`docs/RULES.md`](docs/RULES.md) | 完整规则书 |
 | [`docs/DOCKER.md`](docs/DOCKER.md) | GPU/CPU、privileged 和 Dev Container |

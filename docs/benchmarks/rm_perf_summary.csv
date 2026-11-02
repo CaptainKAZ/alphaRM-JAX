@@ -1,0 +1,4 @@
+label,framework,B,T,frames_per_iter,rollout_seconds,update_seconds,total_seconds,env_steps_per_second,source
+torch_v64,torch,800,200,160000,94.409,62.350,159.059,1005.9,BenchMARL/outputs/train_rm_v64_resume2.log
+jax_cold500,jax,800,200,160000,1.272,52.253,53.589,2985.7,JaxMARL/outputs/rm_jax_cold500_lag1/logs/progress.csv
+jax_league900_1200,jax,800,200,160000,2.250,60.397,65.032,2460.3,JaxMARL/outputs/rm_jax_league900_1200/logs/progress.csv
