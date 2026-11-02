@@ -8,16 +8,17 @@
 3ba06c2 Merge pull request #205 from prakharsahup/fix/overcooked-v2-walkable-border-interact
 ```
 
-原始项目：
+当前 GitHub fork network：
 
-- 上游：https://github.com/FLAIROx/JaxMARL
+- 上游 parent/source：https://github.com/bold-lab-ai/JaxMARL
 - 工作区 fork 来源：https://github.com/bold-lab-ai/JaxMARL
+- 历史链接 `https://github.com/FLAIROx/JaxMARL` 会重定向到当前仓库
 
 本地 Git remote：
 
 ```text
 origin   https://github.com/CaptainKAZ/alphaRM-JAX.git
-upstream https://github.com/FLAIROx/JaxMARL.git
+upstream https://github.com/bold-lab-ai/JaxMARL.git
 ```
 
 - `origin`：alphaRM-JAX 发布仓库
