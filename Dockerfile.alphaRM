@@ -1,0 +1,31 @@
+ARG BASE_IMAGE=nvcr.io/nvidia/jax:26.04-py3
+FROM ${BASE_IMAGE}
+
+ARG UID=1000
+ARG MYUSER=myuser
+
+RUN useradd -u "${UID}" -o --create-home "${MYUSER}"
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      curl \
+      git \
+      iproute2 \
+      tmux \
+    && rm -rf /var/lib/apt/lists/*
+
+USER ${MYUSER}
+WORKDIR /workspace/alphaRM-JAX
+COPY --chown=${MYUSER} . .
+
+USER root
+RUN pip freeze | grep -iE '^(jax|jaxlib|jax-cuda13)' > /tmp/jax-pins.txt && \
+    pip install --no-cache-dir --constraint /tmp/jax-pins.txt -e .[algs,dev,demo] && \
+    rm /tmp/jax-pins.txt
+
+USER ${MYUSER}
+ENV PYTHONPATH=/workspace/alphaRM-JAX
+ENV XLA_PYTHON_CLIENT_PREALLOCATE=false
+ENV TF_FORCE_GPU_ALLOW_GROWTH=true
+
+CMD ["/bin/bash"]

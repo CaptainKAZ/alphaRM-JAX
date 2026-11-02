@@ -12,7 +12,7 @@ version = {attr = "jaxmarl.__version__"}
 [project]
 name = "jaxmarl"
 readme = "README.md"
-description = "Multi-Agent Reinforcement Learning with JAX"
+description = "alphaRM-JAX: RoboMaster 3v3 multi-agent RL on a JaxMARL fork"
 authors = [
     {name = "Foerster Lab for AI Research", email = "arutherford@robots.ox.ac.uk"},
   ]
@@ -61,6 +61,11 @@ dev = [
   "ruff",
   "pyright",
   "pre-commit",
+]
+demo = [
+  "jax2onnx>=0.17.1",
+  "onnx>=1.23",
+  "onnxruntime>=1.31",
 ]
 mabrax = [
   "brax>=0.10.3",

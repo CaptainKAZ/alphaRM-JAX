@@ -1,7 +1,7 @@
 {
-  "name": "JaxMARL",
+  "name": "alphaRM-JAX",
   "build": {
-    "dockerfile": "../Dockerfile",
+    "dockerfile": "../Dockerfile.alphaRM",
   },
   "runArgs": [
     "--gpus",
@@ -10,7 +10,7 @@
     "20g"
   ],
   "privileged": true,
-  "postCreateCommand": "pip install -e /workspaces/JaxMARL",
+  "postCreateCommand": "pip install -e '/workspaces/alphaRM-JAX[algs,dev,demo]'",
   "remoteUser": "myuser",
   "customizations": {
     "vscode": {

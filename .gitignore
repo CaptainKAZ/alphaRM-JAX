@@ -16,3 +16,14 @@ wandb/
 outputs/
 models/
 build/
+*.pkl
+*.npz
+*.npy
+*.mp4
+.onnx_spike/
+.onnx_spike_v1/
+.venv/
+venv/
+.jax_cache/
+*.log
+profiler/
