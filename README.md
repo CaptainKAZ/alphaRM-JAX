@@ -351,6 +351,8 @@ p_motion = 1 / (1 + (ω / 0.75)^2)
 
 ![alphaRM-JAX actor / critic 结构图](docs/assets/rm_jax_actor_critic_arch.svg)
 
+> Aux Loss 是 Actor 训练分支，不接在 Critic 后面；图中辅助头框画在 Actor 面板内。
+
 **Actor**
 
 - 140 维观测 → 11 tokens
