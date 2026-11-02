@@ -93,7 +93,7 @@
   <rect x="55" y="586" width="140" height="52" rx="6" class="pool"/>
   <text x="68" y="607" class="body">self</text><text x="68" y="624" class="micro">token 0</text>
   <rect x="206" y="586" width="140" height="52" rx="6" class="pool"/>
-  <text x="219" y="607" class="body">map</text><text x="219" y="624" class="micro">spawn + center + obstacle</text>
+  <text x="219" y="607" class="body">map</text><text x="219" y="624" class="micro">spawn + center + obs</text>
   <rect x="357" y="586" width="140" height="52" rx="6" class="pool"/>
   <text x="370" y="607" class="body">mates</text><text x="370" y="624" class="micro">concat 2 tokens</text>
   <rect x="508" y="586" width="140" height="52" rx="6" class="pool"/>
@@ -131,7 +131,7 @@
   <text x="72" y="1055" class="head">Training-only auxiliary loss branch (Actor, not Critic)</text>
   <text x="72" y="1079" class="body">encoded 256 + GRU hidden 256 + stop-gradient(action 6) + local obs 140</text>
   <text x="72" y="1101" class="small">tracking 12 · damage 4 · enemy heat 9 · rules 7 · self 14 → 46 supervised outputs</text>
-  <text x="72" y="1120" class="micro">aux_total is added to PPO actor loss; gradients shape Actor encoder/GRU. Auxiliary head parameters are omitted from deployment.</text>
+  <text x="72" y="1120" class="micro">aux_total joins PPO actor loss. Encoder/GRU receive aux gradients; head parameters are deployment-excluded.</text>
 
   <rect x="990" y="96" width="780" height="940" rx="16" class="critic-panel" filter="url(#shadow)"/>
   <text x="1015" y="136" class="panel-title">Critic (centralized, team-canonical)</text>
