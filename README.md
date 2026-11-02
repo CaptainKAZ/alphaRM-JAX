@@ -453,20 +453,27 @@ JAX 最大的优势是把 **800 个向量化环境 + 200 步 recurrent rollout**
 
 相同 `B=800`、`T=200`，每 iter `160,000` 个环境步：
 
-| 阶段 | Torch v64 | JAX basic | JAX league + aux |
+硬件：AMD Ryzen 7 9800X3D（8C/16T）· 15 GiB RAM · RTX 3080 Ti 12 GB ·
+CUDA 13.0 · JAX 0.10.2 · Torch 2.9.1+cu130 · WSL2。
+
+| 阶段 | Torch v64 | JAX basic | JAX league + aux（最快） |
 |---|---:|---:|---:|
-| rollout / collection | **94.4 s** | **1.27 s** | **2.25 s** |
-| PPO update / launch | **62.3 s** | **52.3 s** | **60.4 s** |
-| 完整 iteration | **159.1 s** | **53.6 s** | **65.0 s** |
-| 吞吐 | **1,005 step/s** | **2,986 step/s** | **2,460 step/s** |
+| rollout / collection | **94.4 s** | **1.27 s** | **1.80 s** |
+| PPO update / launch | **62.3 s** | **52.3 s** | **46.9 s** |
+| 完整 iteration | **159.1 s** | **53.6 s** | **50.8 s** |
+| 吞吐 | **1,005 step/s** | **2,986 step/s** | **3,152 step/s** |
 
 结论：
 
-- 完整训练约 **2.4–3×** 加速。
-- rollout 约 **74×**；这是 JAX 最大收益。
-- 纯 PPO update 没有数量级优势，JAX warm 后仍约 **52–60 s/iter**。
+- 完整训练约 **3.1×** 加速。
+- JAX basic rollout 约 **74×**；联赛 + Aux 最快 rollout 约 **52×**。
+- 纯 PPO update 没有数量级优势，JAX warm 后约 **47–52 s/iter**。
 - JAX 首次 iteration 含 XLA 编译约 **191.6 s**，Torch 没有这一项。
-- JAX cold500 实际总时长 **7h32m**；JAX 900→1200 为 **5h20m**。
+- JAX cold500 实际总时长 **7h32m**。
+- 联赛 + Aux 的理论无热限制训练时间约 `300 × 50.8 s = 4h14m`。
+
+> 900→1200 实际日志为 **5h20m**，因为整夜训练时限制了 GPU 风扇转速；后期
+> iteration 中位数升高到 63–65 s。这个 thermal-capped 数字不用于硬件正常性能结论。
 
 详细测量口径、原始日志路径和不可直接横比的配置差异见
 [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md)。

@@ -1,0 +1,33 @@
+{
+  "cpu": {
+    "model": "AMD Ryzen 7 9800X3D 8-Core Processor",
+    "physical_cores": 8,
+    "logical_threads": 16,
+    "l3_cache_mib": 96
+  },
+  "memory": {
+    "total_gib": 15,
+    "swap_gib": 16
+  },
+  "gpu": {
+    "model": "NVIDIA GeForce RTX 3080 Ti",
+    "memory_mib": 12288,
+    "power_limit_w": 350
+  },
+  "host": {
+    "os": "Ubuntu 24.04.3 LTS",
+    "virtualization": "WSL2",
+    "kernel": "6.18.54.1-microsoft-standard-WSL2",
+    "nvidia_driver": "617.42"
+  },
+  "software": {
+    "cuda": "13.0",
+    "jax": "0.10.2",
+    "torch": "2.9.1+cu130",
+    "torch_backend": "CUDA 13.0"
+  },
+  "thermal_conditions": {
+    "performance_baseline": "normal fan curve; uncapped",
+    "overnight_league_run": "GPU fan manually limited for quieter sleep"
+  }
+}

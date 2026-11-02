@@ -6,26 +6,42 @@
 
 - Torch/VMAS 稳态约 **159 s/iter**
 - JAX 基础训练稳态约 **53.6 s/iter**
-- JAX 联赛 + Aux Loss 训练约 **65.0 s/iter**
+- JAX 联赛 + Aux Loss 无热限制最快约 **50.8 s/iter**
 
 端到端约：
 
 ```text
 Torch / JAX basic       ≈ 159.1 / 53.6 = 2.97×
-Torch / JAX league+aux  ≈ 159.1 / 65.0 = 2.45×
+Torch / JAX league+aux  ≈ 159.1 / 50.8 = 3.13×
 ```
 
 **JAX 的优势主要来自 rollout。** 纯 PPO update 与 Torch 同量级，当前实现甚至可能更慢。
 
 ## 2. 测量环境与口径
 
-硬件与栈：
+硬件与软件配置：
 
-- NVIDIA RTX 3080 Ti 12 GB
-- JAX 0.10.2 CUDA
-- Torch/VMAS 与 JAX 使用同一台机器
-- Torch sampling/storing：CPU
-- JAX：GPU `jit + vmap + scan`
+| 项 | 配置 |
+|---|---|
+| CPU | AMD Ryzen 7 9800X3D，8 核 / 16 线程 |
+| 内存 | 15 GiB 可用，16 GiB swap |
+| GPU | NVIDIA GeForce RTX 3080 Ti，12,288 MiB |
+| GPU 功耗上限 | 350 W |
+| NVIDIA driver | 617.42 |
+| CUDA | 13.0 / V13.0.48 |
+| OS | Ubuntu 24.04.3 LTS on WSL2 |
+| Kernel | `6.18.54.1-microsoft-standard-WSL2` |
+| JAX | 0.10.2，CUDA backend |
+| Torch | 2.9.1+cu130 |
+| Torch sampling/storing | CPU |
+| JAX 执行 | GPU `jit + vmap + scan` |
+
+散热口径：
+
+- 无热限制 baseline 使用正常风扇曲线。
+- 900→1200 整夜 run 为避免睡眠时噪音，手动限制了 GPU 风扇转速。
+- 风扇受限后比赛训练 iteration 中位数逐渐升至 63–65 s；主性能表使用无热限制最快
+  iteration 50.8 s，不把 thermal-capped 值当作硬件能力。
 
 共同训练形状：
 
@@ -37,29 +53,36 @@ frames / iter = 800 × 200 = 160,000
 
 JAX 稳态统计排除前 100 iter 以及编译阶段；Torch 统计排除前 20 个样本和明显外部停顿。
 
+联赛 + Aux 的性能以无热限制区间的 **最快 iteration 50.8 s** 为主口径。完整夜间 run
+中后期为了睡眠限制了 GPU 风扇，不能把这个 thermal-capped 中位数当成硬件正常性能。
+
 ## 3. 稳态对比
 
-| 阶段 | Torch v64 | JAX basic | JAX league + aux |
+| 阶段 | Torch v64 | JAX basic | JAX league + aux（最快） |
 |---|---:|---:|---:|
-| rollout / collection | **94.4 s** | **1.27 s** | **2.25 s** |
-| GAE | Torch 内部 | **0.05 s** | **0.04 s** |
-| 辅助标签生成 | 无 | 无 | **0.36 s** |
-| PPO update / launch | **62.3 s** | **52.3 s** | **60.4 s** |
-| 完整 iteration | **159.1 s** | **53.6 s** | **65.0 s** |
-| 端到端 env steps/s | **1,005** | **2,986** | **2,460** |
+| rollout / collection | **94.4 s** | **1.27 s** | **1.80 s** |
+| GAE | Torch 内部 | **0.05 s** | **0.03 s** |
+| 辅助标签生成 | 无 | 无 | **0.35 s** |
+| PPO update / launch | **62.3 s** | **52.3 s** | **46.9 s** |
+| 完整 iteration | **159.1 s** | **53.6 s** | **50.8 s** |
+| 端到端 env steps/s | **1,005** | **2,986** | **3,152** |
 
 说明：
 
 - Torch 的 PPO 数字来自 `opt_loops`，不含 collection。
 - JAX 的 update 使用 `timers_training_time`，包含 jitted PPO/launch 路径。
-- JAX league 的 `total` 还包含少量 league evaluation 时间。
+- 联赛最快样本是 iteration 904。
+- 该 run 正常散热的前 22 个有效 iteration（902–923）中位数为 **53.5 s**，随后风扇限速使
+  训练时间逐步上升到 63–67 s。
+- 整夜 run 的 63–65 s 中位数仅用于说明热限制影响，不作为 JAX 性能结论。
 
 ## 4. Rollout 为什么快
 
-Torch 每个 iteration 的 collection 约 94.4 s，JAX 基础 rollout 约 1.27 s：
+Torch 每个 iteration 的 collection 约 94.4 s：
 
 ```text
-rollout speedup ≈ 74×
+JAX basic rollout speedup   ≈ 94.4 / 1.27 = 74×
+JAX league fastest rollout  ≈ 94.4 / 1.80 = 52×
 ```
 
 主要来源：
@@ -79,9 +102,9 @@ rollout speedup ≈ 74×
 |---|---:|
 | Torch v64 | 约 62.3 s |
 | JAX basic | 约 52.3 s |
-| JAX league + aux | 约 60.4 s |
+| JAX league + aux（最快） | 约 46.9 s |
 
-Aux Loss 与 league 会增加反向图和优化成本，使 JAX update 接近 Torch。
+不同 iteration 会受缓存、编译和热状态影响；即使取最快值，PPO update 与 Torch 仍处于同一量级。
 
 所以正确结论是：
 
@@ -105,7 +128,8 @@ Torch 不需要 XLA 编译。
 | 训练 | 实际/外推总时长 |
 |---|---:|
 | JAX cold500，500 iter | **7 h 32 min** |
-| JAX 900→1200，300 iter | **5 h 20 min** |
+| JAX 联赛 + Aux，300 iter，按 50.8 s | 约 **4 h 14 min** |
+| JAX 联赛 + Aux 实际日志（风扇限速） | **5 h 20 min** |
 | Torch at 159 s/iter，300 iter | 约 13 h 15 min（按稳态外推） |
 | Torch at 159 s/iter，500 iter | 约 22 h 06 min（按稳态外推） |
 
@@ -151,6 +175,7 @@ JAX critic 更重，但 rollout 仍然快得多。反过来，update 时间不�
 
 汇总数据同时保存在
 [`benchmarks/rm_perf_summary.csv`](benchmarks/rm_perf_summary.csv)，可直接用于表格或作图。
+机器配置保存在 [`benchmarks/hardware.json`](benchmarks/hardware.json)。
 
 Torch：
 
@@ -182,7 +207,8 @@ import csv, statistics
 
 paths = [
     ("basic", "JaxMARL/outputs/rm_jax_cold500_lag1/logs/progress.csv", 100, 500),
-    ("league", "JaxMARL/outputs/rm_jax_league900_1200/logs/progress.csv", 1000, 1200),
+    ("league_uncapped", "JaxMARL/outputs/rm_jax_league900_1200/logs/progress.csv", 902, 923),
+    ("league_overnight", "JaxMARL/outputs/rm_jax_league900_1200/logs/progress.csv", 1000, 1200),
 ]
 for name, path, lo, hi in paths:
     rows = [
@@ -199,7 +225,8 @@ PY
 ## 10. 重要结论
 
 - JAX 的最大收益是把向量化环境和 recurrent rollout 编译到 device。
-- 完整训练约快 2.4–3 倍。
-- rollout 可快约 70 倍。
+- 完整训练约快 3.1 倍。
+- rollout 可快 52–74 倍。
 - PPO update 仍占 JAX iteration 的 90% 左右，是最重要的后续优化对象。
+- 比较性能时必须标注 GPU 是否因夜间散热限制而降频。
 - 任何新性能结论都应同时报告 B、T、epochs、minibatch、bf16、scan/remat、aux 和 league 配置。

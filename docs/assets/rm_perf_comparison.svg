@@ -19,7 +19,7 @@
 
   <rect width="1200" height="660" fill="#f2f5f8"/>
   <text x="42" y="46" class="title">alphaRM: JAX vs Torch/VMAS performance</text>
-  <text x="42" y="72" class="subtitle">B=800 · T=200 · 160,000 environment steps per iteration · RTX 3080 Ti 12 GB</text>
+  <text x="42" y="72" class="subtitle">Ryzen 7 9800X3D 8C/16T · 15 GiB RAM · RTX 3080 Ti 12 GB · CUDA 13 · JAX 0.10.2 · WSL2</text>
 
   <rect x="36" y="98" width="1128" height="218" rx="14" class="card"/>
   <text x="58" y="130" class="section">Steady-state iteration time</text>
@@ -37,9 +37,9 @@
   <rect x="260" y="242" width="257" height="32" rx="5" class="basic"/>
   <text x="529" y="263" class="value">53.6 s</text>
 
-  <text x="58" y="317" class="label">JAX league + aux</text>
-  <rect x="260" y="298" width="312" height="32" rx="5" class="league"/>
-  <text x="584" y="319" class="value">65.0 s</text>
+  <text x="58" y="317" class="label">JAX league + aux (fastest)</text>
+  <rect x="260" y="298" width="244" height="32" rx="5" class="league"/>
+  <text x="516" y="319" class="value">50.8 s</text>
 
   <rect x="36" y="338" width="1128" height="218" rx="14" class="card"/>
   <text x="58" y="370" class="section">End-to-end throughput</text>
@@ -57,17 +57,17 @@
   <rect x="260" y="482" width="597" height="32" rx="5" class="basic"/>
   <text x="869" y="503" class="value">2,986 step/s</text>
 
-  <text x="58" y="557" class="label">JAX league + aux</text>
-  <rect x="260" y="538" width="492" height="32" rx="5" class="league"/>
-  <text x="764" y="559" class="value">2,460 step/s</text>
+  <text x="58" y="557" class="label">JAX league + aux (fastest)</text>
+  <rect x="260" y="538" width="630" height="32" rx="5" class="league"/>
+  <text x="902" y="559" class="value">3,152 step/s</text>
 
   <rect x="36" y="578" width="1128" height="58" rx="12" fill="#fffaf0" stroke="#ead5ad"/>
   <text x="58" y="602" class="small">
-    Rollout/collection: Torch 94.4 s vs JAX 1.27 s ≈ 74×. PPO update remains the JAX bottleneck:
-    about 52–60 s and does not show the same order-of-magnitude gain.
+    Rollout/collection: Torch 94.4 s vs JAX basic 1.27 s ≈ 74×. PPO update remains the JAX bottleneck:
+    about 47–52 s and does not show the same order-of-magnitude gain.
   </text>
   <text x="58" y="622" class="small">
-    First JAX iteration includes XLA compilation (about 191.6 s). Torch has no equivalent compile step.
-    Configs differ in critic size and update strategy; see docs/PERFORMANCE.md.
+    League + aux uses the fastest uncapped iteration (50.8 s); the overnight fan-capped median was 63–65 s.
+    First JAX iteration includes XLA compilation (about 191.6 s). See docs/PERFORMANCE.md.
   </text>
 </svg>
