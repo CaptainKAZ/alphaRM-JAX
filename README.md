@@ -26,7 +26,7 @@
 | `baselines/MAPPO/eval_rm_jax.py` | deterministic/stochastic 批量评测 |
 | `liveview/` | 8768 训练观察窗、终局统计、得分曲线和输出文件浏览 |
 | `human_jax_server.py` | JAX 后端的人机大战 HTTP 服务 |
-| `demo/rm_single.html` | 完全本地、模型内嵌的人机大战 / AI 观战演示 |
+| `docs/index.html` | 完全本地、模型内嵌的人机大战 / AI 观战演示，也是 Pages 首页 |
 | `demo/web/` | ONNX 导出、ONNX Runtime Web、Worker、单文件构建源码 |
 
 ## 环境与网络
@@ -115,7 +115,7 @@ docker run --rm -it --gpus all --shm-size=20g \
 直接打开：
 
 ```text
-demo/rm_single.html
+docs/index.html
 ```
 
 单 HTML 默认进入 **观战挂机**：六台机器人全部由 AI 控制。点击“退出观战”后接管当前所选机器人。
@@ -123,15 +123,17 @@ demo/rm_single.html
 也可以本地启动静态服务：
 
 ```bash
-python3 -m http.server 8080 --directory demo
-# http://localhost:8080/rm_single.html
+python3 -m http.server 8080
+# http://localhost:8080/docs/
 ```
 
 详细操作、模型导出和单文件构建见 [demo/README.md](demo/README.md)。
 
-GitHub Pages 发布由 `.github/workflows/pages.yml` 完成；首次在仓库 Settings 中选择
-`Pages -> Source -> GitHub Actions`。部署说明见
-[docs/GITHUB_PAGES.md](docs/GITHUB_PAGES.md)。
+GitHub Pages 直接发布 `main` 分支的 `/docs` 目录：
+
+https://captainkaz.github.io/alphaRM-JAX/
+
+部署说明见 [docs/GITHUB_PAGES.md](docs/GITHUB_PAGES.md)。
 
 ### 2. JAX 后端人机大战
 
@@ -193,10 +195,9 @@ alphaRM-JAX/
 ├── parity/                        # Torch/JAX 对拍、转换和性能分析
 ├── liveview/                      # 8768 训练观察窗
 ├── demo/
-│   ├── rm_single.html             # 内嵌权重/WASM 的单文件演示
 │   ├── human_game.html            # JAX HTTP 人机大战前端
 │   └── web/                       # ONNX 导出、Worker、构建源码和资产
-├── docs/                          # 架构、规则、训练、演示与上游说明
+├── docs/                          # Pages 单文件入口、架构、规则和训练文档
 ├── human_jax_server.py            # JAX 人机大战服务
 ├── CONTRIBUTING.md                # 提交规范、测试和评审要求
 └── README_UPSTREAM.md             # 上游 JaxMARL README

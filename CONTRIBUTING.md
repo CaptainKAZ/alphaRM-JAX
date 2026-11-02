@@ -4,12 +4,11 @@
 
 ## 1. 分支
 
-- `alphaRM-JAX`：主开发分支
-- 功能分支：`feat/<short-name>`
-- 修复分支：`fix/<short-name>`
-- 文档分支：`docs/<short-name>`
+- 唯一长期分支：`main`
+- 不建立 `gh-pages`、`alphaRM-JAX` 等并行长期分支
+- GitHub Pages 直接发布 `main` 分支下的 `docs/`
 
-不要直接在已有发布 tag 上追加提交。
+临时 feature branch 可用于隔离实验，但合并后应删除，不要留下多套并行发布分支。
 
 ## 2. 提交信息格式
 
@@ -108,7 +107,7 @@ curl -fsS http://127.0.0.1:8768/stats.html >/dev/null
 python demo/web/build_single_file_web.py
 ```
 
-`demo/rm_single.html` 是发布产物，应与源码一起提交。提交前至少验证：
+`docs/index.html` 是发布产物，应与源码一起提交。提交前至少验证：
 
 - 页面可通过 HTTP 打开
 - `file://` 直接打开时 Blob Worker 能初始化
@@ -123,7 +122,7 @@ python demo/web/build_single_file_web.py
 - 密钥、token、SSH 配置、内部绝对路径
 - 未经说明的巨大临时 `.npz` / `.pkl` 文件
 
-例外：`demo/rm_single.html` 及其模型/ORT 资产是演示发布物，允许提交；更新权重时必须同步更新演示说明。
+例外：`docs/index.html` 及其模型/ORT 构建资产是演示发布物，允许提交；更新权重时必须同步更新演示说明。
 
 ## 5. 文档要求
 

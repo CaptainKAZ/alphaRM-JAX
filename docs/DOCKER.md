@@ -98,7 +98,7 @@ docker run --rm -it \
 - 8767：`human_jax_server.py`
 - 8768：`liveview/start_rm_live.sh`
 
-单文件 `demo/rm_single.html` 不需要容器端口。
+单文件 `docs/index.html` 不需要容器端口。
 
 ## 6. 数据与 checkpoint
 

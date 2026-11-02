@@ -191,7 +191,7 @@ outputs/live/rm_live.json
 
 ### 单文件 Web 演示
 
-`demo/rm_single.html` 的运行时结构：
+`docs/index.html` 的运行时结构：
 
 ```text
 Canvas UI

@@ -1,6 +1,6 @@
 # alphaRM 人机大战与 AI 观战
 
-`demo/rm_single.html` 是完全本地的单文件演示，内嵌：
+`docs/index.html` 是完全本地的单文件演示，内嵌：
 
 - ORT Web 1.31.1 JavaScript runtime
 - WebAssembly runtime
@@ -46,7 +46,7 @@
 
 | 文件 | 作用 |
 |---|---|
-| `rm_single.html` | 发布用单文件演示 |
+| `../docs/index.html` | 发布用单文件演示，也是 GitHub Pages 首页 |
 | `human_game.html` | JAX HTTP 后端人机大战前端 |
 | `web/index.html` | 多文件 Web 源码 |
 | `web/engine.js` | 状态、动作解码、mask、快照和调试视图 |
@@ -75,7 +75,7 @@ PYTHONPATH=. python human_jax_server.py \
 http://localhost:8767/
 ```
 
-这条路线直接运行 JAX 环境和 actor；`demo/rm_single.html` 则运行 ONNX Web 版本。
+这条路线直接运行 JAX 环境和 actor；`docs/index.html` 则运行 ONNX Web 版本。
 
 ## 重新导出 ONNX
 
@@ -126,7 +126,7 @@ python demo/web/build_single_file_web.py
 输出：
 
 ```text
-demo/rm_single.html
+docs/index.html
 ```
 
 当前文件约 30 MB。

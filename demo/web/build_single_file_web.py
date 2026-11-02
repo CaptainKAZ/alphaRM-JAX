@@ -22,7 +22,7 @@ def main() -> None:
     parser.add_argument(
         "--out",
         type=Path,
-        default=Path(__file__).resolve().parent.parent / "rm_single.html",
+        default=Path(__file__).resolve().parents[2] / "docs" / "index.html",
     )
     args = parser.parse_args()
     root = args.root.resolve()
