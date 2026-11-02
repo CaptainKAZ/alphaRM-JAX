@@ -14,6 +14,10 @@
 - 工作区 fork 来源：https://github.com/bold-lab-ai/JaxMARL
 - 历史链接 `https://github.com/FLAIROx/JaxMARL` 会重定向到当前仓库
 
+同一项目的 PyTorch/VMAS 参考实现：
+
+- https://github.com/CaptainKAZ/alphaRM
+
 本地 Git remote：
 
 ```text
