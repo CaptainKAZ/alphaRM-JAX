@@ -16,10 +16,13 @@
 本地 Git remote：
 
 ```text
+origin   https://github.com/CaptainKAZ/alphaRM-JAX.git
 upstream https://github.com/FLAIROx/JaxMARL.git
 ```
 
-没有配置新的 `origin`，避免在未提供目标地址时误推送到错误仓库。
+- `origin`：alphaRM-JAX 发布仓库
+- `upstream`：官方 JaxMARL
+- GitHub 远端长期分支只有 `main`
 
 ## 保留内容
 
