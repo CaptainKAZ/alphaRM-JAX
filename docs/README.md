@@ -3,6 +3,7 @@
 | 文档 | 内容 |
 |---|---|
 | [ARCHITECTURE.md](ARCHITECTURE.md) | 环境、actor、critic、辅助头、MAPPO、联赛和 Web 运行时 |
+| [AUX_LOSS.md](AUX_LOSS.md) | 辅助预测目标、渐消位置 loss、总权重、梯度边界和评估指标 |
 | [TRAINING_AND_EVALUATION.md](TRAINING_AND_EVALUATION.md) | 1200 轮配方、恢复命令、评测和指标 |
 | [DOCKER.md](DOCKER.md) | GPU/CPU、特权模式、Dev Container 和端口配方 |
 | [GITHUB_PAGES.md](GITHUB_PAGES.md) | `main/docs` 单文件演示的 GitHub Pages 发布 |

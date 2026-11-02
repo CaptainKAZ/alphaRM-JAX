@@ -1,6 +1,6 @@
 # alphaRM-JAX
 
-**alphaRM-JAX** 是 [JaxMARL](https://github.com/FLAIROx/JaxMARL) 的 alphaRM 专用 fork，面向 RoboMaster 3v3 简化规则的 JAX/Flax 多智能体强化学习实现与浏览器演示。
+**alphaRM-JAX** 是 [JaxMARL](https://github.com/bold-lab-ai/JaxMARL) 的 alphaRM 专用 fork，面向 RoboMaster 3v3 简化规则的 JAX/Flax 多智能体强化学习实现与浏览器演示。
 
 当前仓库包含完整的 JAX 环境、MAPPO 训练、冻结最优对手联赛、自博弈、跨代评估、训练观察窗，以及可直接双击打开的人机大战 / AI 对战单文件演示。
 
@@ -74,6 +74,56 @@
 > 当前图对应 JAX 代码：actor 11 tokens、GRU 输入 256 维 encoder；critic 是 3 层、d=192。
 
 完整结构见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
+
+## Auxiliary Loss：训练期世界理解
+
+辅助头不是部署输出，而是给 Actor 的 encoder/GRU 增加可验证的表示学习信号。
+
+输入：
+
+```text
+[GRU hidden 256, encoded 256, executed action 6, local obs 140]
+```
+
+五组预测：
+
+| Head | 维度 | 学习内容 |
+|---|---:|---|
+| Tracking | 12 | 3 敌人的下一帧相对位移、不确定度、下一帧可见性 |
+| Damage | 4 | 开火、条件命中率、伤害、击杀 |
+| Enemy heat | 9 | 3 敌人的热量余量、一步热量变化、过热 |
+| Rules | 7 | 占点、中心得分、击杀分、done |
+| Self | 14 | 自身移动/转向、受伤、回血、冷却、过热、存活和无敌事件 |
+
+位置预测使用**下一帧相对位移**，不是绝对世界坐标。敌人被遮挡后：
+
+```text
+age_weight = 0.5 × (1 + cos(pi × min(age / 15, 1)))
+```
+
+- 0 s：权重 1
+- 0.75 s：权重 0.5
+- 1.5 s：位置权重 0
+- 1.5 s 后辅助头继续学习可见性和其他任务，只是不再追旧位置
+
+总 loss：
+
+```text
+aux_total =
+    1.00 × track
+  + 1.00 × damage
+  + 0.75 × heat
+  + 0.75 × rules
+  + 1.00 × self
+
+actor_loss = PPO_loss + aux_coef × aux_total
+```
+
+最新 1200 轮使用 `aux_coef=0.02`，从 iteration 500 开始用 10 iter 线性升温。执行动作在辅助头输入前做 `stop_gradient`；league 中冻结对手通过 actor mask 排除。
+
+特权状态只用于生成训练标签，不进入部署 Actor。辅助参数保存在 checkpoint 的 `aux_params` 中，但导出 ONNX/Web Actor 时不包含辅助头。
+
+详细公式、指标和梯度边界见 [docs/AUX_LOSS.md](docs/AUX_LOSS.md)。
 
 ## 规则与设计摘要
 

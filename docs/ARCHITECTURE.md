@@ -146,6 +146,8 @@ Critic 输入 `[B,191]`：
 
 联赛训练中，冻结对手不参与 actor 辅助 loss，避免特权标签通过共享 actor 参数影响非学习者一侧。
 
+完整目标定义、loss 权重和指标见 [AUX_LOSS.md](AUX_LOSS.md)。
+
 ## 6. PPO 与联赛
 
 训练 rollout 形状为：
