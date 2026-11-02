@@ -17,6 +17,7 @@ from .mpe import (
     SimpleWorldCommMPE,
 )
 from .multi_agent_env import MultiAgentEnv, State
+from .rm import RmConfig, RmEnv
 from .overcooked import Overcooked, overcooked_layouts
 from .overcooked_v2 import OvercookedV2, overcooked_v2_layouts
 from .smax import SMAX, HeuristicEnemySMAX, LearnedPolicyEnemySMAX
@@ -77,6 +78,8 @@ __all__ = [
     "SimpleWorldCommMPE",
     "MultiAgentEnv",
     "State",
+    "RmConfig",
+    "RmEnv",
     "Overcooked",
     "overcooked_layouts",
     "OvercookedV2",

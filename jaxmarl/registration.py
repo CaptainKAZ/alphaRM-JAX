@@ -13,6 +13,8 @@ from .environments import (
     MultiAgentEnv,
     Overcooked,
     OvercookedV2,
+    RmConfig,
+    RmEnv,
     SimpleAdversaryMPE,
     SimpleCryptoMPE,
     SimpleFacmacMPE,
@@ -139,7 +141,11 @@ def make(env_id: str, **env_kwargs) -> MultiAgentEnv:
     elif env_id == "coin_game":
         env = CoinGame(**env_kwargs)
 
-    # 9. JaxNav
+    # 9. RM 3v3
+    elif env_id == "rm":
+        env = RmEnv(**env_kwargs)
+
+    # 10. JaxNav
     elif env_id == "jaxnav":
         env = JaxNav(**env_kwargs)
 
@@ -199,6 +205,7 @@ registered_envs = [
     "overcooked",
     "overcooked_v2",
     "coin_game",
+    "rm",
     "jaxnav",
     "JaxRobotarium_navigation",
     "JaxRobotarium_discovery",
