@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RM 3v3 · 环境验收模拟器</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#161b22; --line:#2a3140; --text:#dfe6f0; --dim:#8b97a8;
+    --red:#ff4d5e; --blue:#4da3ff; --yellow:#ffd166; --green:#58d68d; --gray:#6b7280;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  #app{display:flex;gap:14px;padding:14px;align-items:flex-start}
+  canvas{background:#0b0e13;border:1px solid var(--line);border-radius:10px;max-width:100%;height:auto}
+  canvas:focus{outline:2px solid var(--yellow);outline-offset:2px}
+  #side{width:340px;min-width:300px;display:flex;flex-direction:column;gap:10px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  h1{font-size:15px;margin:0 0 6px;font-weight:600;letter-spacing:.5px}
+  h2{font-size:12px;margin:0 0 8px;color:var(--dim);font-weight:600;letter-spacing:.8px;text-transform:uppercase}
+  .row{display:flex;justify-content:space-between;gap:8px;font-size:12px;line-height:1.8}
+  .dim{color:var(--dim)}
+  .big{font-size:22px;font-weight:700}
+  .red{color:var(--red)} .blue{color:var(--blue)} .yellow{color:var(--yellow)} .green{color:var(--green)}
+  button,select,input{background:#0f141b;color:var(--text);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font:inherit;font-size:12px}
+  button{cursor:pointer}
+  button:hover{border-color:#4a5568}
+  button.on{border-color:var(--yellow);color:var(--yellow)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .tgt{font-size:12px;padding:6px 4px}
+  .tgt.valid{border-color:#3b6ea8;color:#cfe6ff}
+  .tgt.invalid{opacity:.35}
+  .tgt.active{border-color:var(--yellow);color:var(--yellow);box-shadow:0 0 0 1px var(--yellow) inset}
+  #events{max-height:230px;overflow:auto;font-size:11.5px;line-height:1.65}
+  #events div{border-bottom:1px dashed #232a36;padding:2px 0}
+  .tag{display:inline-block;min-width:34px;color:var(--dim)}
+  kbd{background:#0f141b;border:1px solid var(--line);border-radius:4px;padding:0 4px;font-size:11px}
+  .bar{height:6px;background:#0f141b;border:1px solid var(--line);border-radius:3px;overflow:hidden}
+  .bar>i{display:block;height:100%;background:var(--green)}
+  #overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(5,7,10,.72);z-index:9}
+  #overlay.show{display:flex}
+  #overlay .box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:26px 34px;text-align:center;min-width:360px}
+  #overlay .box h2{font-size:18px;color:var(--text);margin:0 0 8px;text-transform:none;letter-spacing:0}
+  #overlay .box p{color:var(--dim);font-size:12px;margin:6px 0 18px}
+  .hint{font-size:11px;color:var(--dim);line-height:1.8}
+  .mate{border-top:1px dashed #232a36;padding:7px 0;font-size:11.5px}
+  .mate:first-child{border-top:0}
+  .mate-head{display:flex;justify-content:space-between;align-items:center}
+  .mate-fire{color:#ffd166;font-weight:700}
+  .mate-bars{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:4px}
+  .mate .bar{height:4px}
+</style>
+</head>
+<body>
+<div id="app">
+  <canvas id="cv" width="780" height="640" tabindex="0"></canvas>
+  <div id="side">
+    <div class="card">
+      <h1>RM 3v3 · 环境验收</h1>
+      <div class="row"><span class="dim">模式</span><span id="modeTxt">-</span></div>
+      <div class="row"><span class="dim">时间</span><span id="timeTxt" class="big">-</span></div>
+      <div class="row"><span class="red">红方</span><span id="scoreR" class="big red">0.0</span></div>
+      <div class="row"><span class="blue">蓝方</span><span id="scoreB" class="big blue">0.0</span></div>
+      <div class="row"><span class="dim">占点 红/蓝</span><span id="occTxt">0 / 0</span></div>
+      <div class="row"><span class="dim">你在控制</span><span id="humanTxt">-</span></div>
+    </div>
+
+    <div class="card">
+      <h2>操作</h2>
+      <div class="grid2" style="margin-bottom:8px">
+        <button id="pauseBtn" onclick="togglePause()">暂停 P</button>
+        <button onclick="stepOnce()">单步</button>
+      </div>
+      <div class="hint">
+        <span class="yellow">鼠标不按下：朝鼠标方向跟随</span><br>
+        <span class="yellow">右键：选择离鼠标方向最近的可见敌人并保持锁定</span><br>
+        <span class="yellow">左键：对锁定目标开火；右键重新选择目标</span><br>
+        <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 移动 ·
+        <kbd>Shift</kbd> 小陀螺 · <kbd>R</kbd> 重开 ·
+        <kbd>P</kbd> 暂停 · <kbd>H</kbd> 换机器人<br>
+        <span id="aimState">松开 = 跟随，右键 = 锁定，左键 = 开火</span>
+      </div>
+      <div class="hint" style="margin-top:4px">键盘状态：<span id="focusTxt" class="green">已聚焦</span></div>
+      <div class="hint" id="msgTxt" style="min-height:16px;margin-top:4px"></div>
+    </div>
+
+    <div class="card">
+      <h2>验收设置</h2>
+      <div class="grid2" style="margin-bottom:8px">
+        <select id="modeSel" onchange="blurToCanvas(this)">
+          <option value="fixed">固定出生</option>
+          <option value="symmetric">对称随机</option>
+          <option value="asymmetric">不对称随机</option>
+          <option value="mixed">混合 50/50</option>
+        </select>
+        <input id="seedIn" type="number" value="0" title="seed"
+               onchange="blurToCanvas(this)"
+               onkeydown="if(event.key==='Enter'){blurToCanvas(this)}">
+      </div>
+      <div class="grid2" style="margin-bottom:8px">
+        <select id="humanSel" onchange="onHumanChange(this)">
+          <option value="0">控制 R1</option><option value="1">控制 R2</option><option value="2">控制 R3</option>
+          <option value="3">控制 B1</option><option value="4">控制 B2</option><option value="5">控制 B3</option>
+        </select>
+        <button onclick="doReset()">重开 R</button>
+      </div>
+      <div class="grid2" style="margin-bottom:8px">
+        <label class="hint" style="display:flex;align-items:center;gap:6px;margin:0">
+          <input type="checkbox" id="aiChk" checked onchange="toggleAi()"> 脚本 AI
+        </label>
+        <span class="hint" style="text-align:right">取消后其余 5 台静止</span>
+      </div>
+      <div class="grid2">
+        <button id="fovBtn" class="on" onclick="toggleFov()">FOV</button>
+        <button onclick="doReset()">重开一局</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>你的机器人</h2>
+      <div class="row"><span class="dim">HP</span><span id="hpTxt">-</span></div>
+      <div class="bar"><i id="hpBar" style="width:100%"></i></div>
+      <div class="row" style="margin-top:6px"><span class="dim">热量</span><span id="heatTxt">-</span></div>
+      <div class="bar"><i id="heatBar" style="background:var(--yellow);width:0%"></i></div>
+      <div class="row" style="margin-top:6px"><span class="dim">小陀螺 / 目标 / 状态</span><span id="stateTxt">-</span></div>
+    </div>
+
+    <div class="card">
+      <h2>队友状态</h2>
+      <div id="mates"></div>
+    </div>
+
+    <div class="card">
+      <h2>事件</h2>
+      <div id="events"></div>
+    </div>
+  </div>
+</div>
+
+<div id="overlay"><div class="box">
+  <h2 id="ovTitle">终局</h2>
+  <p id="ovSub"></p>
+  <button onclick="doReset()">再来一局 (R)</button>
+</div></div>
+
+<script>
+const CV = document.getElementById('cv');
+const CTX = CV.getContext('2d');
+const W = 12.0, H = 8.0, S = 56, FX = 40, FY = 120;
+const FIELD_W = W*S, FIELD_H = H*S;
+
+const COVERS = [
+  [[-3.50,-1.00],[-3.30,-1.00],[-3.30,2.86],[-1.50,2.86],[-1.50,3.06],[-3.50,3.06]],
+  [[3.50,1.00],[3.30,1.00],[3.30,-2.86],[1.50,-2.86],[1.50,-3.06],[3.50,-3.06]],
+  [[-1.65,-0.10],[-1.50,-0.10],[-1.50,1.70],[-1.65,1.70]],
+  [[1.50,-1.70],[1.65,-1.70],[1.65,0.10],[1.50,0.10]],
+];
+const SPAWNS = [
+  [[-6.0,1.5],[-3.5,1.5],[-3.5,4.0],[-6.0,4.0]],
+  [[3.5,-4.0],[6.0,-4.0],[6.0,-1.5],[3.5,-1.5]],
+];
+const NAMES = ["R1","R2","R3","B1","B2","B3"];
+const ENEMY = {0:[3,4,5],1:[3,4,5],2:[3,4,5],3:[0,1,2],4:[0,1,2],5:[0,1,2]};
+
+let state = null;
+let keys = {w:false,a:false,s:false,d:false,q:false,e:false,shift:false};
+let showFov = true;
+let aiOn = true;
+let lastInput = 0;
+let fireDown = false;
+let lockDown = false;
+let aimAngle = 0;
+const mateFireHold = {};
+const agentFireHold = {};
+
+function toC(x,y){ return [FX + (x+6)*S, FY + (4-y)*S]; }
+function poly(ctx, pts, fill, stroke, lw=1.5){
+  ctx.beginPath();
+  pts.forEach((p,i)=>{ const [x,y]=toC(p[0],p[1]); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+  ctx.closePath();
+  if(fill){ ctx.fillStyle=fill; ctx.fill(); }
+  if(stroke){ ctx.strokeStyle=stroke; ctx.lineWidth=lw; ctx.stroke(); }
+}
+function circle(ctx, x, y, r, fill, stroke, lw=1.5, dash=null){
+  ctx.save(); if(dash) ctx.setLineDash(dash);
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
+  if(fill){ ctx.fillStyle=fill; ctx.fill(); }
+  if(stroke){ ctx.strokeStyle=stroke; ctx.lineWidth=lw; ctx.stroke(); }
+  ctx.restore();
+}
+
+function drawField(){
+  CTX.clearRect(0,0,CV.width,CV.height);
+  // field
+  const [x0,y0]=toC(-6,4), [x1,y1]=toC(6,-4);
+  CTX.fillStyle = '#121a15';
+  CTX.fillRect(x0,y0,x1-x0,y1-y0);
+  CTX.strokeStyle = '#3a4757'; CTX.lineWidth = 2;
+  CTX.strokeRect(x0,y0,x1-x0,y1-y0);
+  // grid
+  CTX.save(); CTX.strokeStyle='rgba(255,255,255,.04)'; CTX.lineWidth=1;
+  for(let x=-5;x<=5;x++){ const [a,b]=toC(x,4),[c,d]=toC(x,-4); CTX.beginPath();CTX.moveTo(a,b);CTX.lineTo(c,d);CTX.stroke(); }
+  for(let y=-3;y<=3;y++){ const [a,b]=toC(-6,y),[c,d]=toC(6,y); CTX.beginPath();CTX.moveTo(a,b);CTX.lineTo(c,d);CTX.stroke(); }
+  CTX.restore();
+  // spawn zones
+  poly(CTX, SPAWNS[0], 'rgba(255,77,94,.07)', 'rgba(255,77,94,.35)', 1.5);
+  poly(CTX, SPAWNS[1], 'rgba(77,163,255,.07)', 'rgba(77,163,255,.35)', 1.5);
+  // center circle
+  const [cx,cy]=toC(0,0);
+  circle(CTX,cx,cy,1.5*S,'rgba(255,209,102,.04)','rgba(255,209,102,.55)',2,[8,6]);
+  // covers
+  for(const c of COVERS) poly(CTX,c,'#2b3442','#556379',1.5);
+  // labels
+  CTX.font='12px ui-monospace,monospace'; CTX.fillStyle='#8b97a8';
+  CTX.fillText('RED SPAWN', FX+10, FY+18);
+  CTX.fillText('BLUE SPAWN', FX+FIELD_W-96, FY+FIELD_H-12);
+  CTX.fillStyle='rgba(255,209,102,.7)'; CTX.fillText('CENTER R=1.5', cx-40, cy-1.5*S-8);
+}
+
+function drawFov(r){
+  if(!showFov) return;
+  const [x,y]=toC(r.x,r.y);
+  const a=r.yaw, half=Math.PI/4, L=8*S;
+  CTX.save();
+  CTX.beginPath(); CTX.moveTo(x,y);
+  CTX.arc(x,y,L,-a-half,-a+half); CTX.closePath();
+  CTX.fillStyle='rgba(255,209,102,.06)'; CTX.fill();
+  CTX.strokeStyle='rgba(255,209,102,.35)'; CTX.lineWidth=1; CTX.stroke();
+  CTX.restore();
+}
+
+function drawRobot(r, human){
+  const [x,y]=toC(r.x,r.y);
+  const rad = 0.30*S;
+  if(!r.alive){
+    circle(CTX,x,y,rad*0.9,'#3a3f4a','#6b7280',1.5,[3,3]);
+    CTX.fillStyle='#6b7280'; CTX.font='10px ui-monospace,monospace'; CTX.textAlign='center';
+    CTX.fillText('DEAD',x,y+3);
+    if(r.respawn_timer>0){ CTX.fillStyle='#8b97a8'; CTX.fillText(r.respawn_timer.toFixed(1)+'s',x,y+16); }
+    CTX.textAlign='left';
+    return;
+  }
+  const col = r.team===0 ? '#ff4d5e' : '#4da3ff';
+  const fill = r.team===0 ? 'rgba(255,77,94,.20)' : 'rgba(77,163,255,.20)';
+  circle(CTX,x,y,rad,fill,col,2);
+  if(human){ circle(CTX,x,y,rad+5,null,'#ffffff',2,[4,3]); }
+  if(r.invuln){ circle(CTX,x,y,rad+9,null,'rgba(255,209,102,.9)',2,[3,4]); }
+  // turret
+  CTX.save(); CTX.strokeStyle='#ffffff'; CTX.lineWidth=2;
+  CTX.beginPath(); CTX.moveTo(x,y); CTX.lineTo(x+Math.cos(r.yaw)*rad*1.9, y-Math.sin(r.yaw)*rad*1.9); CTX.stroke();
+  CTX.restore();
+  // spin ring
+  if(r.spin>0.01){
+    CTX.save(); CTX.strokeStyle='rgba(88,214,141,.85)'; CTX.lineWidth=2;
+    CTX.beginPath(); CTX.arc(x,y,rad+3,-Math.PI/2,-Math.PI/2+Math.PI*2*r.spin); CTX.stroke(); CTX.restore();
+  }
+  // hp bar
+  const bw=0.78*S, bh=5, bx=x-bw/2, by=y-rad-13;
+  CTX.fillStyle='#0b0e13'; CTX.fillRect(bx,by,bw,bh);
+  CTX.fillStyle = r.hp>150 ? '#58d68d' : r.hp>65 ? '#ffd166' : '#ff4d5e';
+  CTX.fillRect(bx,by,bw*Math.max(0,Math.min(1,r.hp/325)),bh);
+  CTX.strokeStyle='#2a3140'; CTX.lineWidth=1; CTX.strokeRect(bx,by,bw,bh);
+  // heat bar
+  const hy=y+rad+8;
+  CTX.fillStyle='#0b0e13'; CTX.fillRect(bx,hy,bw,4);
+  if(r.heat_known === false){
+    CTX.fillStyle = '#4b5563';
+    CTX.fillRect(bx,hy,bw,4);
+    CTX.fillStyle = '#8b97a8'; CTX.font='9px monospace';
+    CTX.fillText('H?', bx+bw+4, hy+5);
+  } else {
+    CTX.fillStyle = r.overheated ? '#ff4d5e' : '#4da3ff';
+    CTX.fillRect(bx,hy,bw*Math.max(0,Math.min(1,r.heat/160)),4);
+  }
+  // name
+  CTX.fillStyle='#dfe6f0'; CTX.font='11px ui-monospace,monospace'; CTX.textAlign='center';
+  CTX.fillText(r.name, x, by-4);
+  if(r.fired) agentFireHold[r.name] = performance.now() + 220;
+  if(performance.now() < (agentFireHold[r.name] || 0)){
+    const dx = Math.cos(r.yaw), dy = -Math.sin(r.yaw);
+    const mx = x + dx * rad * 2.05, my = y + dy * rad * 2.05;
+    const px = -dy, py = dx;
+    const tipX = mx + dx * 10, tipY = my + dy * 10;
+    CTX.save();
+    CTX.globalCompositeOperation = 'lighter';
+    const glow = CTX.createRadialGradient(mx, my, 1, mx, my, 12);
+    glow.addColorStop(0, 'rgba(255,255,210,.95)');
+    glow.addColorStop(.35, 'rgba(255,190,50,.75)');
+    glow.addColorStop(1, 'rgba(255,80,20,0)');
+    CTX.fillStyle = glow;
+    CTX.beginPath(); CTX.arc(mx, my, 12, 0, Math.PI * 2); CTX.fill();
+    CTX.beginPath();
+    CTX.moveTo(mx, my);
+    CTX.lineTo(tipX + px * 5, tipY + py * 5);
+    CTX.lineTo(tipX, tipY);
+    CTX.lineTo(tipX - px * 5, tipY - py * 5);
+    CTX.closePath();
+    CTX.fillStyle = '#ffd166';
+    CTX.fill();
+    CTX.restore();
+  }
+  CTX.textAlign='left';
+}
+
+function drawTargetLine(){
+  if(!state || !state.target) return;
+  const h = state.human;
+  const hr = state.robots[h];
+  const g = ENEMY[h][state.target-1];
+  const tr = state.robots[g];
+  if(!tr || !tr.alive || !tr.visible) return;
+  const [x0,y0]=toC(hr.x,hr.y), [x1,y1]=toC(tr.x,tr.y);
+  CTX.save(); CTX.setLineDash([6,6]); CTX.strokeStyle='rgba(255,209,102,.7)'; CTX.lineWidth=1.5;
+  CTX.beginPath(); CTX.moveTo(x0,y0); CTX.lineTo(x1,y1); CTX.stroke(); CTX.restore();
+}
+
+function drawHUD(){
+  if(!state) return;
+  CTX.fillStyle='#dfe6f0'; CTX.font='bold 20px ui-monospace,monospace';
+  CTX.fillText('RM 3v3 · v1.2', FX, 34);
+  CTX.font='13px ui-monospace,monospace'; CTX.fillStyle='#8b97a8';
+  CTX.fillText('FOV 90°  |  10 Hz  |  300 s / 200 pts', FX, 56);
+  // score box
+  CTX.font='bold 26px ui-monospace,monospace';
+  CTX.fillStyle='#ff4d5e'; CTX.fillText(state.score[0].toFixed(1), FX, 92);
+  CTX.fillStyle='#8b97a8'; CTX.font='12px ui-monospace,monospace';
+  CTX.fillText('RED', FX+70, 90);
+  CTX.fillStyle='#4da3ff'; CTX.font='bold 26px ui-monospace,monospace';
+  CTX.fillText(state.score[1].toFixed(1), FX+120, 92);
+  CTX.fillStyle='#8b97a8'; CTX.font='12px ui-monospace,monospace';
+  CTX.fillText('BLUE', FX+190, 90);
+  CTX.fillStyle='#dfe6f0'; CTX.font='bold 18px ui-monospace,monospace';
+  CTX.fillText(state.time.toFixed(1)+' s', FX+280, 91);
+  CTX.fillStyle='#8b97a8'; CTX.font='12px ui-monospace,monospace';
+  CTX.fillText('OCC '+state.occ[0]+' : '+state.occ[1], FX+380, 90);
+  if(state.paused){ CTX.fillStyle='#ffd166'; CTX.fillText('PAUSED', FX+520, 90); }
+  if(state.done){ CTX.fillStyle='#ffd166'; CTX.fillText(state.outcome_name||'DONE', FX+520, 90); }
+}
+
+function render(){
+  drawField();
+  if(!state) return;
+  const h = state.human;
+  const hr = state.robots[h];
+  drawFov(hr);
+  drawTargetLine();
+  for(let i=0;i<6;i++){
+    const r=state.robots[i];
+    // 敌人必须由当前 agent 真实可见才显示；队友始终显示。
+    if(i !== h && r.team !== hr.team && !r.visible) continue;
+    drawRobot(r, i===h);
+  }
+  drawHUD();
+  // side panel
+  document.getElementById('modeTxt').textContent = state.mode;
+  document.getElementById('timeTxt').textContent = state.time.toFixed(1)+'s';
+  document.getElementById('scoreR').textContent = state.score[0].toFixed(1);
+  document.getElementById('scoreB').textContent = state.score[1].toFixed(1);
+  document.getElementById('occTxt').textContent = state.occ[0]+' / '+state.occ[1];
+  document.getElementById('humanTxt').textContent = state.human_name;
+  document.getElementById('hpTxt').textContent = hr.hp.toFixed(1)+' / 325';
+  document.getElementById('hpBar').style.width = Math.max(0,Math.min(100,hr.hp/3.25))+'%';
+  document.getElementById('heatTxt').textContent = hr.heat.toFixed(1)+' / 160'+(hr.overheated?'  过热':'');
+  document.getElementById('heatBar').style.width = Math.max(0,Math.min(100,hr.heat/1.6))+'%';
+  document.getElementById('stateTxt').textContent =
+    's='+hr.spin.toFixed(2)+'  tgt='+hr.target+'  p_t='+hr.p_t.toFixed(2)+
+    (hr.invuln?'  无敌 '+hr.invuln_timer.toFixed(1)+'s':'')+
+    (!hr.alive?'  复活 '+hr.respawn_timer.toFixed(1)+'s':'');
+  renderMates();
+  document.getElementById('aimState').textContent = state.fire_down
+    ? '左键开火中 · 右键可切换目标'
+    : state.lock_down
+      ? '右键锁定中：按鼠标角度选择最近可见敌人'
+      : '松开：鼠标方向控制朝向 · 右键锁定 · 左键开火';
+  document.getElementById('pauseBtn').textContent = state.paused ? '继续 P' : '暂停 P';
+  // events
+  const ev = document.getElementById('events');
+  ev.innerHTML = (state.events||[]).map(e=>`<div><span class="tag">${e.t.toFixed(1)}s</span><b>${e.kind}</b> ${e.text}</div>`).join('');
+  // overlay
+  const ov=document.getElementById('overlay');
+  if(state.done){ ov.classList.add('show'); document.getElementById('ovTitle').textContent = state.outcome_name || '终局';
+    document.getElementById('ovSub').textContent = `红 ${state.score[0].toFixed(1)} : ${state.score[1].toFixed(1)} 蓝`;
+  } else { ov.classList.remove('show'); }
+}
+
+function renderMates(){
+  if(!state) return;
+  const h = state.human;
+  const team = state.robots[h].team;
+  const root = document.getElementById('mates');
+  if(!root) return;
+  const mates = state.robots
+    .map((r,i)=>({r,i}))
+    .filter(x=>x.i!==h && x.r.team===team);
+  root.innerHTML = mates.map(({r,i})=>{
+    const hp = Math.max(0, Math.min(100, r.hp/3.25));
+    const heat = Math.max(0, Math.min(100, r.heat/1.6));
+    if(r.fired) mateFireHold[i] = performance.now() + 350;
+    const firing = performance.now() < (mateFireHold[i] || 0);
+    let status = r.alive ? '存活' : '复活 '+r.respawn_timer.toFixed(1)+'s';
+    if(r.alive && r.invuln) status += ' · 无敌';
+    if(r.alive && r.overheated) status += ' · 过热';
+    if(r.alive && r.target) status += ' · TGT '+r.target;
+    return `<div class="mate">
+      <div class="mate-head"><b class="${team===0?'red':'blue'}">${r.name}</b><span class="${firing?'mate-fire':'dim'}">${firing?'● FIRING':status}</span></div>
+      <div class="row" style="line-height:1.4"><span>HP ${r.hp.toFixed(0)}</span><span>H ${r.heat.toFixed(0)}</span></div>
+      <div class="mate-bars">
+        <div class="bar"><i style="width:${hp}%;background:${r.hp>150?'#58d68d':r.hp>65?'#ffd166':'#ff4d5e'}"></i></div>
+        <div class="bar"><i style="width:${heat}%;background:${r.overheated?'#ff4d5e':'#4da3ff'}"></i></div>
+      </div></div>`;
+  }).join('');
+}
+
+async function poll(){
+  try{
+    const r = await fetch('/api/state', {cache:'no-store'});
+    state = await r.json();
+    window.__rmState = state;
+    render();
+  }catch(e){ /* keep last frame */ }
+}
+setInterval(poll, 80);
+
+function sendInput(force=false){
+  const now = Date.now();
+  if(!force && now-lastInput < 80) return;
+  lastInput = now;
+  fetch('/api/input', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      keys, ai: aiOn, fire_down: fireDown, lock_down: lockDown,
+      aim_angle: aimAngle
+    })}).catch(()=>{});
+}
+setInterval(()=>sendInput(true), 200);
+
+function setMsg(text, cls){
+  const el = document.getElementById('msgTxt');
+  if(!el) return;
+  el.textContent = text;
+  el.className = 'hint ' + (cls||'');
+}
+
+function togglePause(){
+  fetch('/api/pause',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})}).catch(()=>{});
+}
+function stepOnce(){
+  fetch('/api/step',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).catch(()=>{});
+}
+function toggleFov(){ showFov=!showFov; document.getElementById('fovBtn').classList.toggle('on',showFov); }
+function toggleAi(){ aiOn=document.getElementById('aiChk').checked; sendInput(true); }
+
+function updateAim(e){
+  if(!state) return;
+  const rect = CV.getBoundingClientRect();
+  const sx = (e.clientX - rect.left) * (CV.width / rect.width);
+  const sy = (e.clientY - rect.top) * (CV.height / rect.height);
+  if(sx < FX || sx > FX + FIELD_W || sy < FY || sy > FY + FIELD_H) return;
+  const wx = (sx - FX) / S - 6.0;
+  const wy = 4.0 - (sy - FY) / S;
+  const hr = state.robots[state.human];
+  aimAngle = Math.atan2(wy - hr.y, wx - hr.x);
+  sendInput(false);
+}
+CV.addEventListener('pointerdown', e=>{
+  updateAim(e);
+  if(e.button === 2) lockDown = true;
+  else if(e.button === 0) fireDown = true;
+  else return;
+  sendInput(true);
+  CV.setPointerCapture?.(e.pointerId);
+  e.preventDefault();
+});
+CV.addEventListener('pointermove', updateAim);
+window.addEventListener('pointerup', e=>{
+  if(e.button === 2) lockDown = false;
+  if(e.button === 0) fireDown = false;
+  sendInput(true);
+});
+window.addEventListener('pointercancel', ()=>{
+  lockDown = false;
+  fireDown = false;
+  sendInput(true);
+});
+CV.addEventListener('contextmenu', e=>e.preventDefault());
+
+function doReset(){
+  const mode = document.getElementById('modeSel').value;
+  const seed = parseInt(document.getElementById('seedIn').value||'0',10);
+  const human = parseInt(document.getElementById('humanSel').value||'0',10);
+  fetch('/api/reset',{method:'POST',headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({mode, seed, human})}).catch(()=>{});
+  CV.focus();
+}
+
+function blurToCanvas(el){ el.blur(); CV.focus(); }
+function onHumanChange(el){
+  fetch('/api/input',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({human: parseInt(el.value,10)})}).catch(()=>{});
+  blurToCanvas(el);
+}
+
+function seedFocused(e){
+  return e.target && e.target.id === 'seedIn';
+}
+function seedKey(k){
+  return /^[0-9eE+\-.,]$/.test(k);
+}
+
+window.addEventListener('keydown', e=>{
+  const k = e.key.toLowerCase();
+  if(seedFocused(e) && seedKey(k)) return;  // let the seed input receive its digits
+  if(['w','a','s','d'].includes(k)){ keys[k]=true; sendInput(true); e.preventDefault(); }
+  else if(k==='shift'){ keys.shift=true; sendInput(true); e.preventDefault(); }
+  else if(k==='r'){ doReset(); e.preventDefault(); }
+  else if(k==='p'){ togglePause(); e.preventDefault(); }
+  else if(k==='t'){ toggleFov(); e.preventDefault(); }
+  else if(k==='h'){
+    const sel=document.getElementById('humanSel');
+    sel.selectedIndex = (sel.selectedIndex+1)%6;
+    fetch('/api/input',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({human: parseInt(sel.value,10)})}).catch(()=>{});
+    e.preventDefault();
+  }
+});
+window.addEventListener('keyup', e=>{
+  const k = e.key.toLowerCase();
+  if(seedFocused(e) && seedKey(k)) return;
+  if(['w','a','s','d'].includes(k)){ keys[k]=false; sendInput(true); e.preventDefault(); }
+  if(k==='shift'){ keys.shift=false; sendInput(true); e.preventDefault(); }
+});
+window.addEventListener('blur', ()=>{ for(const k in keys) keys[k]=false; sendInput(true); });
+document.addEventListener('click', e=>{ if(e.target && e.target.tagName==='BUTTON') e.target.blur(); });
+CV.addEventListener('click', ()=>CV.focus());
+function setFocusTxt(txt, ok){
+  const el = document.getElementById('focusTxt');
+  if(!el) return;
+  el.textContent = txt;
+  el.className = ok ? 'green' : 'yellow';
+}
+CV.addEventListener('focus', ()=>setFocusTxt('已聚焦', true));
+CV.addEventListener('blur', ()=>setFocusTxt('未聚焦，点画面', false));
+window.addEventListener('focus', ()=>setFocusTxt('已聚焦', true));
+window.addEventListener('blur', ()=>setFocusTxt('未聚焦，点画面', false));
+poll();
+CV.focus();
+</script>
+</body>
+</html>
